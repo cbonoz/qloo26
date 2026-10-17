@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server";
+import { isTurnstileConfigured } from "@/lib/turnstile";
 
 export function GET(request: Request) {
   // Read a request-time value so Next.js does not bake environment flags into a static response.
   return NextResponse.json({
     qlooConfigured: Boolean(process.env.QLOO_API_KEY),
     narrativeConfigured: Boolean(process.env.OPENAI_API_KEY),
+    turnstileEnabled: isTurnstileConfigured(),
+    analysisEnabled: process.env.LAUNCHLENS_ANALYSIS_ENABLED !== "false",
   }, {
     headers: {
       "Cache-Control": "no-store",

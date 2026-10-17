@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
-import { calculateAlignmentScore, createDemoReport } from "@/lib/analysis";
+import { calculateAlignmentScore } from "@/lib/analysis";
+import { checkAnonymousAnalysisLimit, getAnonymousIdentifier, recordAnonymousAttempt } from "@/lib/abuse";
 import { createNarrative } from "@/lib/narrative";
 import { getRelatedBrands, QlooApiError, searchEntities } from "@/lib/qloo";
+import { isTurnstileConfigured, verifyTurnstileToken } from "@/lib/turnstile";
 import type { AnalysisReport, SignalEvidence } from "@/lib/types";
 
 type RequestBody = {
@@ -10,34 +12,91 @@ type RequestBody = {
   signals?: unknown;
   campaignA?: unknown;
   campaignB?: unknown;
-  demo?: unknown;
+  companyWebsite?: unknown;
+  turnstileToken?: unknown;
 };
 
 function cleanText(value: unknown, maxLength: number) {
   return typeof value === "string" ? value.trim().slice(0, maxLength) : "";
 }
 
-function jsonError(message: string, status: number, code?: string) {
-  return NextResponse.json({ error: message, ...(code ? { code } : {}) }, { status });
+function exceedsTextLimit(value: unknown, maxLength: number) {
+  return typeof value === "string" && value.trim().length > maxLength;
+}
+
+function jsonError(message: string, status: number, code?: string, retryAfterSeconds?: number) {
+  return NextResponse.json(
+    { error: message, ...(code ? { code } : {}) },
+    {
+      status,
+      headers: retryAfterSeconds ? { "Retry-After": String(retryAfterSeconds) } : undefined,
+    },
+  );
 }
 
 export async function POST(request: Request) {
+  if (process.env.LAUNCHLENS_ANALYSIS_ENABLED === "false") {
+    return jsonError("Live analysis is temporarily paused. Please try again later.", 503, "analysis_disabled");
+  }
+
+  if (request.headers.get("content-type")?.split(";")[0].trim() !== "application/json") {
+    return jsonError("Send this request as JSON.", 415, "unsupported_content_type");
+  }
+
+  const origin = request.headers.get("origin");
+  if (origin) {
+    try {
+      if (new URL(origin).host !== new URL(request.url).host) {
+        return jsonError("Cross-origin requests are not accepted.", 403, "origin_not_allowed");
+      }
+    } catch {
+      return jsonError("Invalid request origin.", 403, "origin_not_allowed");
+    }
+  }
+
+  const identifier = getAnonymousIdentifier(request);
+  const attemptLimit = recordAnonymousAttempt(identifier);
+  if (!attemptLimit.allowed) {
+    return jsonError("Too many requests. Please wait briefly before trying again.", 429, "rate_limited", attemptLimit.retryAfterSeconds);
+  }
+
+  const contentLength = Number(request.headers.get("content-length") || 0);
+  if (contentLength > 8_192) return jsonError("The request is too large. Shorten the inputs and try again.", 413, "request_too_large");
+
+  let rawBody: string;
+  try {
+    rawBody = await request.text();
+  } catch {
+    return jsonError("Send a valid JSON request.", 400, "invalid_json");
+  }
+  if (new TextEncoder().encode(rawBody).byteLength > 8_192) {
+    return jsonError("The request is too large. Shorten the inputs and try again.", 413, "request_too_large");
+  }
+
   let body: RequestBody;
   try {
-    body = (await request.json()) as RequestBody;
+    body = JSON.parse(rawBody) as RequestBody;
   } catch {
     return jsonError("Send a valid JSON request.", 400, "invalid_json");
   }
 
-  if (body.demo === true) {
-    return NextResponse.json(createDemoReport());
+  if (typeof body.companyWebsite === "string" && body.companyWebsite.trim()) {
+    return jsonError("The request could not be processed.", 400, "invalid_request");
   }
 
   const brandQuery = cleanText(body.brand, 100);
   const marketQuery = cleanText(body.market, 100);
+  const rawSignals = Array.isArray(body.signals) ? body.signals : [];
+  if (exceedsTextLimit(body.brand, 100)) return jsonError("Brand or product names must be 100 characters or fewer.", 400, "brand_too_long");
+  if (exceedsTextLimit(body.market, 100)) return jsonError("Market names must be 100 characters or fewer.", 400, "market_too_long");
+  if (rawSignals.length > 4) return jsonError("Use no more than four audience cues in one analysis.", 400, "too_many_signals");
+  if (rawSignals.some((signal) => exceedsTextLimit(signal, 80))) return jsonError("Each audience cue must be 80 characters or fewer.", 400, "signal_too_long");
   const signals = Array.isArray(body.signals)
-    ? [...new Set(body.signals.map((item) => cleanText(item, 80)).filter(Boolean))].slice(0, 5)
+    ? [...new Set(body.signals.map((item) => cleanText(item, 80)).filter(Boolean))]
     : [];
+  if (exceedsTextLimit(body.campaignA, 180) || exceedsTextLimit(body.campaignB, 180)) {
+    return jsonError("Campaign concepts must be 180 characters or fewer.", 400, "campaign_too_long");
+  }
   const campaignA = cleanText(body.campaignA, 180);
   const campaignB = cleanText(body.campaignB, 180);
 
@@ -46,6 +105,39 @@ export async function POST(request: Request) {
   if (signals.length < 2) return jsonError("Add at least two audience cues so Qloo can compare cultural signals.", 400, "too_few_signals");
   if (Boolean(campaignA) !== Boolean(campaignB)) {
     return jsonError("Enter both campaign options, or leave both blank.", 400, "incomplete_comparison");
+  }
+
+  if (!process.env.QLOO_API_KEY) {
+    return jsonError("Qloo API key is not configured. Add QLOO_API_KEY to .env.local.", 503, "missing_api_key");
+  }
+
+  const bodyLimit = checkAnonymousAnalysisLimit(identifier, false, Date.now(), false);
+  if (!bodyLimit.allowed && bodyLimit.reason !== "challenge_required") {
+    const message = bodyLimit.reason === "daily_limit" || bodyLimit.reason === "instance_limit"
+      ? "The anonymous analysis limit has been reached. Please try again tomorrow."
+      : "Too many requests. Please wait briefly before trying again.";
+    return jsonError(message, 429, bodyLimit.reason, bodyLimit.retryAfterSeconds);
+  }
+
+  if (!bodyLimit.allowed && bodyLimit.reason === "challenge_required") {
+    const token = typeof body.turnstileToken === "string" ? body.turnstileToken : "";
+    if (!token && isTurnstileConfigured()) {
+      return jsonError("Complete the quick check before continuing.", 428, "challenge_required", bodyLimit.retryAfterSeconds);
+    }
+    if (!isTurnstileConfigured()) {
+      return jsonError("Too many analyses from this connection. Please wait before trying again.", 429, "rate_limited", bodyLimit.retryAfterSeconds);
+    }
+    const hostname = new URL(request.url).hostname;
+    if (!(await verifyTurnstileToken(token, hostname))) {
+      return jsonError("Verification did not complete. Please try again.", 403, "challenge_failed");
+    }
+    const challengedLimit = checkAnonymousAnalysisLimit(identifier, true, Date.now(), false);
+    if (!challengedLimit.allowed) {
+      const message = challengedLimit.reason === "daily_limit" || challengedLimit.reason === "instance_limit"
+        ? "The anonymous analysis limit has been reached. Please try again tomorrow."
+        : "Too many requests. Please wait briefly before trying again.";
+      return jsonError(message, 429, challengedLimit.reason, challengedLimit.retryAfterSeconds);
+    }
   }
 
   try {
