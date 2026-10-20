@@ -1,5 +1,4 @@
 export type SignalEvidence = {
-  kind: "audience" | "market";
   input: string;
   name: string;
   entityId: string;
@@ -17,6 +16,7 @@ export type AnalysisReport = {
   mode: "demo" | "live";
   brand: { name: string; entityId: string };
   market: string;
+  marketResolved: string;
   audienceSignals: string[];
   score: number;
   directHits: number;

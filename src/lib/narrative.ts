@@ -120,11 +120,11 @@ export async function createNarrative(
             content: JSON.stringify({
               brand: report.brand.name,
               targetMarket: report.market,
+              qlooResolvedMarket: report.marketResolved,
               audienceSignals: report.audienceSignals,
               qlooScore: report.score,
               directHits: `${report.directHits}/${report.signalCount}`,
               qlooEvidence: report.evidence.map((item) => ({
-                signalType: item.kind,
                 signalName: item.name,
                 targetBrandRank: item.targetRank === null ? null : item.targetRank + 1,
                 relatedBrands: item.relatedBrands.slice(0, 8).map((brand) => brand.name),

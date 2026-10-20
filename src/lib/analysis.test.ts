@@ -4,7 +4,6 @@ import type { SignalEvidence } from "./types";
 
 function evidence(targetRank: number | null, relatedCount = 20): SignalEvidence {
   return {
-    kind: "audience",
     input: "sample cue",
     name: "Sample cue",
     entityId: "sample-id",

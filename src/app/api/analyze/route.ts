@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { calculateAlignmentScore } from "@/lib/analysis";
-import { checkAnonymousAnalysisLimit, getAnonymousIdentifier, recordAnonymousAttempt } from "@/lib/abuse";
+import { checkAnonymousAnalysisLimit, checkSharedAnonymousAnalysisLimit, getAnonymousIdentifier, recordAnonymousAttempt } from "@/lib/abuse";
 import { createNarrative } from "@/lib/narrative";
 import { getRelatedBrands, QlooApiError, searchEntities } from "@/lib/qloo";
 import type { AnalysisReport, SignalEvidence } from "@/lib/types";
@@ -118,16 +118,27 @@ export async function POST(request: Request) {
   }
 
   try {
-    const [brandMatches, marketMatches, seedMatches] = await Promise.all([
+    const sharedLimit = await checkSharedAnonymousAnalysisLimit(identifier);
+    if (sharedLimit && !sharedLimit.allowed) {
+      return jsonError(
+        "This visitor has reached the three-analysis daily limit. Please try again tomorrow.",
+        429,
+        sharedLimit.reason,
+        sharedLimit.retryAfterSeconds,
+      );
+    }
+  } catch {
+    return jsonError("Live analysis is temporarily unavailable because the usage limit could not be verified.", 503, "rate_limit_store_unavailable");
+  }
+
+  try {
+    const [brandMatches, seedMatches] = await Promise.all([
       searchEntities(brandQuery, "urn:entity:brand"),
-      searchEntities(marketQuery, "urn:entity:locality"),
       Promise.all(signals.map(async (input) => ({ input, matches: await searchEntities(input) }))),
     ]);
 
     const brand = brandMatches[0];
     if (!brand) return jsonError(`Qloo could not resolve “${brandQuery}” as a brand. Try a more specific name.`, 422, "brand_not_found");
-    const market = marketMatches[0];
-    if (!market) return jsonError(`Qloo could not resolve “${marketQuery}” as a market locality. Try a city, region, or country name.`, 422, "market_not_found");
 
     const resolvedSeeds = seedMatches.flatMap(({ input, matches }) => {
       const entity = matches[0];
@@ -142,45 +153,33 @@ export async function POST(request: Request) {
       );
     }
 
-    const evidenceResults = await Promise.all([
-      ...resolvedSeeds.map(async ({ input, entity }): Promise<SignalEvidence> => {
-        const related = await getRelatedBrands(entity.entityId, 20);
-        const targetIndex = related.findIndex((item) =>
+    // Qloo location queries are fuzzy; use the leading locality name from inputs like "Tokyo, Japan".
+    const locationQuery = marketQuery.split(",")[0].trim() || marketQuery;
+    const insightResults = await Promise.all(resolvedSeeds.map(async ({ input, entity }) => {
+      const { brands, locality } = await getRelatedBrands(entity.entityId, 20, locationQuery);
+      const targetIndex = brands.findIndex((item) =>
           item.entityId.toLowerCase() === brand.entityId.toLowerCase() ||
           item.name.toLowerCase() === brand.name.toLowerCase(),
         );
-        return {
-          kind: "audience",
-          input,
-          name: entity.name,
-          entityId: entity.entityId,
-          relatedBrands: related.map((item, index) => ({ name: item.name, entityId: item.entityId, rank: index + 1 })),
-          targetRank: targetIndex === -1 ? null : targetIndex,
-        };
-      }),
-      (async (): Promise<SignalEvidence> => {
-        const related = await getRelatedBrands(market.entityId, 20);
-        const targetIndex = related.findIndex((item) =>
-          item.entityId.toLowerCase() === brand.entityId.toLowerCase() ||
-          item.name.toLowerCase() === brand.name.toLowerCase(),
-        );
-        return {
-          kind: "market",
-          input: marketQuery,
-          name: market.name,
-          entityId: market.entityId,
-          relatedBrands: related.map((item, index) => ({ name: item.name, entityId: item.entityId, rank: index + 1 })),
-          targetRank: targetIndex === -1 ? null : targetIndex,
-        };
-      })(),
-    ]);
+      const evidence: SignalEvidence = {
+        input,
+        name: entity.name,
+        entityId: entity.entityId,
+        relatedBrands: brands.map((item, index) => ({ name: item.name, entityId: item.entityId, rank: index + 1 })),
+        targetRank: targetIndex === -1 ? null : targetIndex,
+      };
+      return { evidence, locality };
+    }));
+    const evidenceResults = insightResults.map((item) => item.evidence);
+    const marketResolved = insightResults.find((item) => item.locality)?.locality?.name || locationQuery;
 
     const { score, directHits } = calculateAlignmentScore(evidenceResults);
     const report: AnalysisReport = {
       mode: "live",
       brand,
-      market: market.name,
-      audienceSignals: evidenceResults.filter((item) => item.kind === "audience").map((item) => item.name),
+      market: marketQuery,
+      marketResolved,
+      audienceSignals: evidenceResults.map((item) => item.name),
       score,
       directHits,
       signalCount: evidenceResults.length,

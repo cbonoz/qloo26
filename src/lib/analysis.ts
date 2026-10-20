@@ -22,38 +22,27 @@ export function createDemoReport(): AnalysisReport {
   const brand = { name: "Aesop", entityId: "demo-brand-aesop" };
   const demoSignals = [
     {
-      kind: "audience" as const,
       input: "Kinfolk",
       name: "Kinfolk",
       entityId: "demo-signal-kinfolk",
       brands: ["Muji", "Aesop", "Hay", "Le Labo", "Tekla", "Byredo", "Ferm Living", "Frama", "Studio Nicholson", "Nonfiction", "Comme des Garçons", "Acne Studios", "Artek", "L:A Bruket", "Vitra", "HAY House", "Margaret Howell", "Loewe", "Cereal", "Apartamento"],
     },
     {
-      kind: "audience" as const,
       input: "Blue Bottle Coffee",
       name: "Blue Bottle Coffee",
       entityId: "demo-signal-blue-bottle",
       brands: ["Fellow", "Oatly", "Stumptown", "Aesop", "Patagonia Provisions", "Blue Bottle", "Intelligentsia", "Onyx Coffee Lab", "Kinto", "MiiR", "Trade Coffee", "Verve Coffee", "Counter Culture", "La Colombe", "Clever Dripper", "Fellow Carter", "Cometeer", "Sey Coffee", "April Coffee", "Moccamaster"],
     },
     {
-      kind: "audience" as const,
       input: "The Row",
       name: "The Row",
       entityId: "demo-signal-the-row",
       brands: ["Khaite", "Lemaire", "Toteme", "Bottega Veneta", "Loro Piana", "Aesop", "Jil Sander", "The Frankie Shop", "Studio Nicholson", "COS", "Joseph", "Celine", "Brunello Cucinelli", "Gabriela Hearst", "Dries Van Noten", "Loewe", "Mansur Gavriel", "Proenza Schouler", "Khaite Home", "Lemaire Objects"],
     },
-    {
-      kind: "market" as const,
-      input: "Tokyo, Japan",
-      name: "Tokyo, Japan",
-      entityId: "demo-market-tokyo",
-      brands: ["Shiseido", "Comme des Garçons", "Aesop", "Uniqlo", "Issey Miyake", "Muji", "Onitsuka Tiger", "Snow Peak", "Porter-Yoshida", "Beams", "Blue Bottle Coffee", "Niko and...", "Kapital", "Visvim", "Mizuno", "Asics", "Dover Street Market", "Kinto", "Tadao Ando", "Hender Scheme"],
-    },
   ];
   const evidence: SignalEvidence[] = demoSignals.map((signal) => {
     const targetIndex = signal.brands.indexOf(brand.name);
     return {
-      kind: signal.kind,
       input: signal.input,
       name: signal.name,
       entityId: signal.entityId,
@@ -71,12 +60,13 @@ export function createDemoReport(): AnalysisReport {
     mode: "demo",
     brand,
     market: "Tokyo, Japan",
-    audienceSignals: demoSignals.filter((signal) => signal.kind === "audience").map((signal) => signal.name),
+    marketResolved: "Tokyo",
+    audienceSignals: demoSignals.map((signal) => signal.name),
     score,
     directHits,
     signalCount: evidence.length,
     summary:
-      "In this illustrative example, Aesop appears in related-brand lists for all three audience cues and for the Tokyo market signal. Treat this as a demo of the report format, not live Qloo research or evidence of market demand.",
+      "In this illustrative example, Aesop appears in location-aware related-brand results for all three culture cues in Tokyo. Treat this as a demo of the report format, not live Qloo research or evidence of market demand.",
     strengths: [
       "Design-led, considered brand associations appear across all three sample cues.",
       "The sample audience signals span independent publishing, specialty coffee, and luxury fashion.",
@@ -99,10 +89,9 @@ export function createFallbackNarrative(report: AnalysisReport): Pick<
   AnalysisReport,
   "summary" | "strengths" | "risks" | "recommendations"
 > {
-  const audienceEvidence = report.evidence.filter((item) => item.kind === "audience");
-  const marketEvidence = report.evidence.find((item) => item.kind === "market");
+  const audienceEvidence = report.evidence;
   const matched = audienceEvidence.filter((item) => item.targetRank !== null);
-  const marketMatched = marketEvidence?.targetRank !== null && marketEvidence?.targetRank !== undefined;
+  const marketLabel = report.marketResolved || report.market;
   const strongest = [...matched].sort((a, b) => (a.targetRank ?? 0) - (b.targetRank ?? 0))[0];
   const sampleTopBrands = report.evidence
     .flatMap((item) => item.relatedBrands.slice(0, 3).map((brand) => brand.name))
@@ -111,17 +100,17 @@ export function createFallbackNarrative(report: AnalysisReport): Pick<
 
   return {
     summary: strongest
-      ? `${report.brand.name} appears in Qloo's related-brand results for ${matched.length} of ${audienceEvidence.length} audience cues${marketEvidence ? ` and ${marketMatched ? "also appears" : "does not appear"} in the ${report.market} market signal` : ""}. Its strongest audience overlap is with ${strongest.name} (rank ${strongest.targetRank! + 1}). These are cultural hypotheses to investigate, not evidence of market demand or campaign performance.`
-      : `Qloo did not return ${report.brand.name} in the top related-brand results for these audience cues${marketEvidence ? ` or as a direct match for the ${report.market} market signal` : ""}. This is a gap to investigate, not proof the audience will reject the brand.`,
+      ? `${report.brand.name} appears in Qloo's location-aware related-brand results for ${matched.length} of ${audienceEvidence.length} culture cues in ${marketLabel}. Its strongest observed overlap is with ${strongest.name} (rank ${strongest.targetRank! + 1}). These are hypotheses to investigate, not evidence of market demand or campaign performance.`
+      : `Qloo did not return ${report.brand.name} in the top location-aware related-brand results for these culture cues in ${marketLabel}. This is a gap to investigate, not proof the audience will reject the brand.`,
     strengths: matched.length
       ? matched.slice(0, 3).map(
           (item) => `${report.brand.name} appears among the related brands for ${item.name} (rank ${item.targetRank! + 1}).`,
         )
       : ["The selected audience cues resolved successfully and can be used to explore adjacent cultural territory."],
     risks: [
-      matched.length < audienceEvidence.length || (marketEvidence && !marketMatched)
-        ? `Potential gap to investigate: direct brand overlap was found for ${matched.length} of ${audienceEvidence.length} culture cues${marketEvidence ? ` and ${marketMatched ? "a direct match was present" : `no direct match was found for ${report.market}`}` : ""}.`
-        : `This is a small set of cultural signals for ${report.market}; it does not measure local awareness, demand, or distribution readiness.`,
+      matched.length < audienceEvidence.length
+        ? `Potential gap to investigate: direct brand overlap was found for ${matched.length} of ${audienceEvidence.length} culture cues in ${marketLabel}.`
+        : `This is a small set of location-aware cultural signals for ${marketLabel}; it does not measure local awareness, demand, or distribution readiness.`,
       "Affinity rankings describe cultural association, not causation, reach, or likely sales lift.",
     ],
     recommendations: [

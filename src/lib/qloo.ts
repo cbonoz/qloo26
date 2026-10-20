@@ -5,6 +5,11 @@ export type QlooEntity = {
   entityId: string;
 };
 
+export type RelatedBrandsResult = {
+  brands: Array<QlooEntity & { popularity: number | null }>;
+  locality: QlooEntity | null;
+};
+
 export class QlooApiError extends Error {
   constructor(
     message: string,
@@ -27,6 +32,14 @@ function responseEntities(payload: unknown): UnknownRecord[] {
   return Array.isArray(array)
     ? array.map(asRecord).filter((item): item is UnknownRecord => item !== null)
     : [];
+}
+
+function responseLocality(payload: unknown): QlooEntity | null {
+  const root = asRecord(payload);
+  const query = asRecord(root?.query);
+  const localities = asRecord(query?.localities ?? query?.locality);
+  const signal = asRecord(localities?.signal);
+  return signal ? normalizeQlooEntity(signal) : null;
 }
 
 export function normalizeQlooEntity(value: UnknownRecord): QlooEntity | null {
@@ -81,17 +94,19 @@ export async function searchEntities(query: string, type?: string) {
     .filter((entity): entity is QlooEntity => entity !== null);
 }
 
-export async function getRelatedBrands(entityId: string, take = 20) {
+export async function getRelatedBrands(entityId: string, take = 20, locationQuery?: string): Promise<RelatedBrandsResult> {
   const params = new URLSearchParams({
     "filter.type": "urn:entity:brand",
     "signal.interests.entities": entityId,
     take: String(take),
   });
+  if (locationQuery) params.set("signal.location.query", locationQuery);
   const payload = await requestQloo("/v2/insights", params);
-  return responseEntities(payload)
+  const brands = responseEntities(payload)
     .map((entity) => {
       const normalized = normalizeQlooEntity(entity);
       return normalized ? { ...normalized, popularity: typeof entity.popularity === "number" ? entity.popularity : null } : null;
     })
     .filter((entity): entity is QlooEntity & { popularity: number | null } => entity !== null);
+  return { brands, locality: locationQuery ? responseLocality(payload) : null };
 }
