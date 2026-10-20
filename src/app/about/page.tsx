@@ -26,8 +26,8 @@ export default function AboutPage() {
         <section className="about-prose-section">
           <h2>A cultural first check for new markets</h2>
           <p>When a brand considers entering a new city or country, teams need to understand more than the size of a category. They also want to know whether the brand’s cultural associations may connect with the people and places they hope to reach. LaunchLens is designed to make that question easier to explore.</p>
-          <p>A user provides a brand or product, a target market, and a few audience cues—such as artists, films, publications, brands, or places. LaunchLens uses Qloo to resolve those inputs and retrieve location-aware brand affinities. The result is a concise brief showing observed connections, possible gaps, and ideas worth testing.</p>
-          <p>This is deliberately a sanity check, not a market-entry recommendation. Cultural affinity can help a team form a sharper hypothesis, but it does not establish local awareness, demand, distribution readiness, or likely sales.</p>
+          <p>A user provides a brand or product, a target market, and a few audience cues—such as artists, films, publications, brands, or places. LaunchLens uses Qloo to resolve those inputs and retrieve location-aware brand associations. The result is a concise brief showing observed connections, possible gaps, and ideas worth testing.</p>
+          <p>This is deliberately a sanity check, not a market-entry recommendation. Cultural associations can help a team form a sharper hypothesis, but they do not establish local awareness, demand, distribution readiness, or likely sales.</p>
         </section>
 
         <section className="about-section" id="methodology">
@@ -40,7 +40,7 @@ export default function AboutPage() {
             <article className="about-step"><span className="about-step-number">01</span><h3>Resolve the inputs</h3><p>Qloo Search resolves the brand and each audience cue to Qloo entities. LaunchLens shows which entities were selected.</p></article>
             <article className="about-step"><span className="about-step-number">02</span><h3>Apply market context</h3><p>Each Qloo Insights request uses the audience cue together with the target market’s location query to retrieve local-context brand results.</p></article>
             <article className="about-step"><span className="about-step-number">03</span><h3>Calculate overlap</h3><p>The score summarizes where the target brand appears in the related-brand lists. The report keeps the per-cue rankings visible.</p></article>
-            <article className="about-step"><span className="about-step-number">04</span><h3>Frame what to test</h3><p>When configured, xAI turns the supplied evidence into a summary and testable hypotheses. It does not supply Qloo data or score the affinity itself.</p></article>
+            <article className="about-step"><span className="about-step-number">04</span><h3>Frame what to test</h3><p>When configured, xAI turns the supplied evidence into a summary and testable hypotheses. It does not supply Qloo data or score the underlying associations.</p></article>
           </div>
           <div className="method-formula"><div><span className="small-kicker">THE SCORE</span><strong>Mean rank-based overlap</strong></div><p>For each culture cue, a rank-1 match in a 20-result list contributes 100; a rank-20 match contributes 5; and no direct match contributes 0. A missing match is not evidence that an audience dislikes the brand.</p></div>
         </section>

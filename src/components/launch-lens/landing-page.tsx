@@ -8,7 +8,7 @@ export function LandingPage({ onStart }: { onStart: () => void }) {
         <div className="landing-copy">
           <div className="eyebrow"><span className="eyebrow-line" />CULTURAL CONTEXT FOR WHAT’S NEXT</div>
           <h1>Enter new markets<br />with <em>more context.</em></h1>
-          <p>Explore how your brand may connect with a new market’s culture. Qloo taste signals turn affinities into hypotheses to test.</p>
+          <p>Find the cultural connections—and gaps—between your brand and a target market. LaunchLens uses Qloo data to turn them into hypotheses your team can test before investing.</p>
           <div className="landing-actions">
             <button className="landing-primary-button" type="button" onClick={onStart}>Start a market check <Icon name="arrow" size={16} /></button>
             <a className="landing-secondary-link" href="#how-it-works">How it works <span>↓</span></a>
@@ -43,7 +43,7 @@ export function LandingPage({ onStart }: { onStart: () => void }) {
         </div>
         <div className="landing-feature-grid">
           <article className="landing-feature-card"><span className="landing-feature-number">01</span><span className="landing-feature-icon"><Icon name="report" size={17} /></span><h3>Ground your brief</h3><p>Choose a brand, market, and 2–4 audience cues.</p></article>
-          <article className="landing-feature-card"><span className="landing-feature-number">02</span><span className="landing-feature-icon"><Icon name="users" size={17} /></span><h3>See the connections</h3><p>Explore Qloo affinity signals in market context.</p></article>
+          <article className="landing-feature-card"><span className="landing-feature-number">02</span><span className="landing-feature-icon"><Icon name="users" size={17} /></span><h3>See the connections</h3><p>Explore Qloo’s location-aware cultural signals.</p></article>
           <article className="landing-feature-card"><span className="landing-feature-number">03</span><span className="landing-feature-icon"><Icon name="sparkle" size={17} /></span><h3>Find ideas to test</h3><p>Turn patterns into hypotheses—not promises.</p></article>
         </div>
       </section>
