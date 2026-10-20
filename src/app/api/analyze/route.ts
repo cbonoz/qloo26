@@ -3,7 +3,6 @@ import { calculateAlignmentScore } from "@/lib/analysis";
 import { checkAnonymousAnalysisLimit, getAnonymousIdentifier, recordAnonymousAttempt } from "@/lib/abuse";
 import { createNarrative } from "@/lib/narrative";
 import { getRelatedBrands, QlooApiError, searchEntities } from "@/lib/qloo";
-import { isTurnstileConfigured, verifyTurnstileToken } from "@/lib/turnstile";
 import type { AnalysisReport, SignalEvidence } from "@/lib/types";
 
 type RequestBody = {
@@ -13,7 +12,6 @@ type RequestBody = {
   campaignA?: unknown;
   campaignB?: unknown;
   companyWebsite?: unknown;
-  turnstileToken?: unknown;
 };
 
 function cleanText(value: unknown, maxLength: number) {
@@ -111,33 +109,12 @@ export async function POST(request: Request) {
     return jsonError("Qloo API key is not configured. Add QLOO_API_KEY to .env.local.", 503, "missing_api_key");
   }
 
-  const bodyLimit = checkAnonymousAnalysisLimit(identifier, false, Date.now(), false);
-  if (!bodyLimit.allowed && bodyLimit.reason !== "challenge_required") {
+  const bodyLimit = checkAnonymousAnalysisLimit(identifier, Date.now(), false);
+  if (!bodyLimit.allowed) {
     const message = bodyLimit.reason === "daily_limit" || bodyLimit.reason === "instance_limit"
       ? "The anonymous analysis limit has been reached. Please try again tomorrow."
       : "Too many requests. Please wait briefly before trying again.";
     return jsonError(message, 429, bodyLimit.reason, bodyLimit.retryAfterSeconds);
-  }
-
-  if (!bodyLimit.allowed && bodyLimit.reason === "challenge_required") {
-    const token = typeof body.turnstileToken === "string" ? body.turnstileToken : "";
-    if (!token && isTurnstileConfigured()) {
-      return jsonError("Complete the quick check before continuing.", 428, "challenge_required", bodyLimit.retryAfterSeconds);
-    }
-    if (!isTurnstileConfigured()) {
-      return jsonError("Too many analyses from this connection. Please wait before trying again.", 429, "rate_limited", bodyLimit.retryAfterSeconds);
-    }
-    const hostname = new URL(request.url).hostname;
-    if (!(await verifyTurnstileToken(token, hostname))) {
-      return jsonError("Verification did not complete. Please try again.", 403, "challenge_failed");
-    }
-    const challengedLimit = checkAnonymousAnalysisLimit(identifier, true, Date.now(), false);
-    if (!challengedLimit.allowed) {
-      const message = challengedLimit.reason === "daily_limit" || challengedLimit.reason === "instance_limit"
-        ? "The anonymous analysis limit has been reached. Please try again tomorrow."
-        : "Too many requests. Please wait briefly before trying again.";
-      return jsonError(message, 429, challengedLimit.reason, challengedLimit.retryAfterSeconds);
-    }
   }
 
   try {

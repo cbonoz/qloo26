@@ -20,7 +20,7 @@ type InstanceBucket = { day: string; dailyAnalyses: number };
 
 export type AnalysisLimitResult =
   | { allowed: true }
-  | { allowed: false; reason: "challenge_required" | "rate_limited" | "daily_limit" | "instance_limit"; retryAfterSeconds: number };
+  | { allowed: false; reason: "rate_limited" | "daily_limit" | "instance_limit"; retryAfterSeconds: number };
 
 export type AttemptLimitResult = { allowed: true } | { allowed: false; retryAfterSeconds: number };
 
@@ -74,7 +74,6 @@ function cleanupBuckets(now: number) {
  */
 export function checkAnonymousAnalysisLimit(
   identifier: string,
-  challengeVerified: boolean,
   now = Date.now(),
   countAttempt = true,
 ): AnalysisLimitResult {
@@ -98,9 +97,9 @@ export function checkAnonymousAnalysisLimit(
     return { allowed: false, reason: "instance_limit", retryAfterSeconds: secondsUntilNextUtcDay(now) };
   }
 
-  if (bucket.analyses.length >= MAX_ANALYSES_PER_WINDOW && !challengeVerified) {
+  if (bucket.analyses.length >= MAX_ANALYSES_PER_WINDOW) {
     const retryAfterSeconds = Math.max(1, Math.ceil((bucket.analyses[0] + WINDOW_MS - now) / 1000));
-    return { allowed: false, reason: "challenge_required", retryAfterSeconds };
+    return { allowed: false, reason: "rate_limited", retryAfterSeconds };
   }
 
   bucket.analyses.push(now);

@@ -1,9 +1,40 @@
-import type { AnalysisReport, CampaignAssessment } from "@/lib/types";
-import { createFallbackNarrative } from "@/lib/analysis";
+import type { AnalysisReport, CampaignAssessment } from "./types";
+import { createFallbackNarrative } from "./analysis";
 
 type Narrative = ReturnType<typeof createFallbackNarrative> & {
   comparison?: [CampaignAssessment, CampaignAssessment];
 };
+
+const narrativeSchema = {
+  type: "object",
+  properties: {
+    summary: { type: "string" },
+    strengths: { type: "array", items: { type: "string" } },
+    risks: { type: "array", items: { type: "string" } },
+    recommendations: {
+      type: "array",
+      items: { type: "string" },
+      minItems: 3,
+      maxItems: 3,
+    },
+    comparison: {
+      type: "array",
+      maxItems: 2,
+      items: {
+        type: "object",
+        properties: {
+          name: { type: "string" },
+          score: { type: "number", minimum: 0, maximum: 100 },
+          rationale: { type: "string" },
+        },
+        required: ["name", "score", "rationale"],
+        additionalProperties: false,
+      },
+    },
+  },
+  required: ["summary", "strengths", "risks", "recommendations", "comparison"],
+  additionalProperties: false,
+} as const;
 
 function responseText(payload: unknown) {
   if (!payload || typeof payload !== "object") return "";
@@ -59,7 +90,7 @@ export async function createNarrative(
   campaigns?: [string, string],
 ): Promise<Narrative & { aiAssisted: boolean }> {
   const fallback = createFallbackNarrative(report);
-  const apiKey = process.env.OPENAI_API_KEY;
+  const apiKey = process.env.XAI_API_KEY;
   if (!apiKey) {
     return {
       ...fallback,
@@ -69,36 +100,53 @@ export async function createNarrative(
   }
 
   try {
-    const response = await fetch("https://api.openai.com/v1/responses", {
+    const response = await fetch("https://api.x.ai/v1/responses", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: process.env.OPENAI_MODEL || "gpt-6-astra",
-        instructions:
-          "You are a cautious market-entry cultural analyst for LaunchLens. Use only the supplied Qloo evidence. Never invent affinities, demographics, local market demand, or causal claims. Frame promising connections and gaps as hypotheses to investigate, not as go/no-go conclusions. Return one JSON object with keys summary (string), strengths (string array), risks (string array), recommendations (string array of exactly 3), and comparison (array of two objects with name, score from 0 to 100, rationale; omit or use [] if no options were supplied). Scores for campaign options are heuristic judgments based on the supplied evidence, not Qloo scores or market predictions.",
-        input: JSON.stringify({
-          brand: report.brand.name,
-          targetMarket: report.market,
-          audienceSignals: report.audienceSignals,
-          qlooScore: report.score,
-          directHits: `${report.directHits}/${report.signalCount}`,
-          qlooEvidence: report.evidence.map((item) => ({
-            signalType: item.kind,
-            signalName: item.name,
-            targetBrandRank: item.targetRank === null ? null : item.targetRank + 1,
-            relatedBrands: item.relatedBrands.slice(0, 8).map((brand) => brand.name),
-          })),
-          campaignOptions: campaigns,
-        }),
-        max_output_tokens: 650,
+        model: process.env.XAI_MODEL || "grok-4.7",
+        store: false,
+        input: [
+          {
+            role: "system",
+            content:
+              "You are a cautious market-entry cultural analyst for LaunchLens. Use only the supplied Qloo evidence. Never invent affinities, demographics, local market demand, or causal claims. Frame promising connections and gaps as hypotheses to investigate, not as go/no-go conclusions. Give exactly three recommendations. If campaign options are present, return one comparison assessment per option; otherwise return an empty comparison list. Scores for campaign options are heuristic judgments based on the supplied evidence, not Qloo scores or market predictions.",
+          },
+          {
+            role: "user",
+            content: JSON.stringify({
+              brand: report.brand.name,
+              targetMarket: report.market,
+              audienceSignals: report.audienceSignals,
+              qlooScore: report.score,
+              directHits: `${report.directHits}/${report.signalCount}`,
+              qlooEvidence: report.evidence.map((item) => ({
+                signalType: item.kind,
+                signalName: item.name,
+                targetBrandRank: item.targetRank === null ? null : item.targetRank + 1,
+                relatedBrands: item.relatedBrands.slice(0, 8).map((brand) => brand.name),
+              })),
+              campaignOptions: campaigns,
+            }),
+          },
+        ],
+        text: {
+          format: {
+            type: "json_schema",
+            name: "launchlens_market_entry_report",
+            strict: true,
+            schema: narrativeSchema,
+          },
+        },
+        max_output_tokens: 900,
       }),
       signal: AbortSignal.timeout(20_000),
       cache: "no-store",
     });
-    if (!response.ok) throw new Error(`OpenAI returned ${response.status}`);
+    if (!response.ok) throw new Error(`xAI returned ${response.status}`);
     const parsed = parseNarrative(responseText(await response.json()));
     if (!parsed?.summary || !parsed.recommendations?.length) throw new Error("Narrative response was incomplete");
     return {
@@ -120,6 +168,6 @@ function fallbackCampaignComparison(campaigns: [string, string]): [CampaignAsses
   return campaigns.map((name) => ({
     name,
     score: 50,
-    rationale: "Add OPENAI_API_KEY to generate an AI-assisted comparison grounded in the live Qloo evidence. This neutral placeholder is not a Qloo score.",
+    rationale: "Add XAI_API_KEY to generate an AI-assisted comparison grounded in the live Qloo evidence. This neutral placeholder is not a Qloo score.",
   })) as [CampaignAssessment, CampaignAssessment];
 }

@@ -4,28 +4,23 @@ import { checkAnonymousAnalysisLimit, recordAnonymousAttempt, resetRateLimitsFor
 describe("anonymous analysis limits", () => {
   beforeEach(() => resetRateLimitsForTests());
 
-  it("allows five analyses and then asks for a challenge", () => {
+  it("allows five analyses and then enforces the burst limit", () => {
     for (let index = 0; index < 5; index += 1) {
-      expect(checkAnonymousAnalysisLimit("visitor-a", false, index * 1000).allowed).toBe(true);
+      expect(checkAnonymousAnalysisLimit("visitor-a", index * 1000).allowed).toBe(true);
     }
-    expect(checkAnonymousAnalysisLimit("visitor-a", false, 6000)).toMatchObject({
+    expect(checkAnonymousAnalysisLimit("visitor-a", 6000)).toMatchObject({
       allowed: false,
-      reason: "challenge_required",
+      reason: "rate_limited",
     });
-  });
-
-  it("accepts a challenge-verified request above the burst limit", () => {
-    for (let index = 0; index < 5; index += 1) checkAnonymousAnalysisLimit("visitor-a", false, index * 1000);
-    expect(checkAnonymousAnalysisLimit("visitor-a", true, 6000)).toEqual({ allowed: true });
   });
 
   it("enforces a per-visitor daily cap", () => {
     const start = Date.UTC(2026, 0, 1);
     for (let index = 0; index < 20; index += 1) {
-      const result = checkAnonymousAnalysisLimit("visitor-a", true, start + index * 1000);
+      const result = checkAnonymousAnalysisLimit("visitor-a", start + index * 601_000);
       expect(result.allowed).toBe(true);
     }
-    expect(checkAnonymousAnalysisLimit("visitor-a", true, start + 21_000)).toMatchObject({
+    expect(checkAnonymousAnalysisLimit("visitor-a", start + 20 * 601_000)).toMatchObject({
       allowed: false,
       reason: "daily_limit",
     });

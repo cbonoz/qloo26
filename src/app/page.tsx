@@ -1,39 +1,15 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import Script from "next/script";
+import { useEffect, useMemo, useState } from "react";
 import type { CSSProperties, FormEvent, ReactNode } from "react";
 import { createDemoReport } from "@/lib/analysis";
 import type { AnalysisReport } from "@/lib/types";
 
 type ApiStatus = {
   qlooConfigured: boolean;
-  narrativeConfigured: boolean;
-  turnstileEnabled: boolean;
+  xaiConfigured: boolean;
   analysisEnabled: boolean;
 };
-
-type TurnstileApi = {
-  render: (
-    container: HTMLElement,
-    options: {
-      sitekey: string;
-      action: string;
-      appearance: "interaction-only";
-      callback: (token: string) => void;
-      "error-callback"?: () => void;
-      "expired-callback"?: () => void;
-    },
-  ) => string;
-  remove: (widgetId: string) => void;
-  reset: (widgetId: string) => void;
-};
-
-declare global {
-  interface Window {
-    turnstile?: TurnstileApi;
-  }
-}
 
 const initialMarket = "Tokyo, Japan";
 
@@ -63,39 +39,14 @@ export default function Home() {
   const [status, setStatus] = useState<ApiStatus | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [challengeRequired, setChallengeRequired] = useState(false);
-  const [turnstileToken, setTurnstileToken] = useState("");
-  const [turnstileReady, setTurnstileReady] = useState(false);
   const [companyWebsite, setCompanyWebsite] = useState("");
-  const turnstileContainer = useRef<HTMLDivElement>(null);
-  const turnstileWidgetId = useRef<string | null>(null);
-  const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "";
-  const turnstileEnabled = Boolean(turnstileSiteKey && status?.turnstileEnabled);
 
   useEffect(() => {
     fetch("/api/status", { cache: "no-store" })
       .then((response) => response.json())
       .then((value: ApiStatus) => setStatus(value))
-      .catch(() => setStatus({ qlooConfigured: false, narrativeConfigured: false, turnstileEnabled: false, analysisEnabled: true }));
+      .catch(() => setStatus({ qlooConfigured: false, xaiConfigured: false, analysisEnabled: true }));
   }, []);
-
-  useEffect(() => {
-    if (!challengeRequired || !turnstileEnabled || !turnstileReady || !window.turnstile || !turnstileContainer.current) return;
-    turnstileWidgetId.current = window.turnstile.render(turnstileContainer.current, {
-      sitekey: turnstileSiteKey,
-      action: "launchlens_analysis",
-      appearance: "interaction-only",
-      callback: (token) => setTurnstileToken(token),
-      "error-callback": () => setError("Verification could not be completed. Please try again."),
-      "expired-callback": () => setTurnstileToken(""),
-    });
-    return () => {
-      if (turnstileWidgetId.current && window.turnstile) {
-        window.turnstile.remove(turnstileWidgetId.current);
-        turnstileWidgetId.current = null;
-      }
-    };
-  }, [challengeRequired, turnstileEnabled, turnstileReady, turnstileSiteKey]);
 
   const signals = useMemo(
     () => [...new Set(signalText.split(/[\n,]/).map((item) => item.trim()).filter(Boolean))],
@@ -138,24 +89,14 @@ export default function Home() {
           campaignA: campaignA.trim() || undefined,
           campaignB: campaignB.trim() || undefined,
           companyWebsite,
-          turnstileToken: turnstileToken || undefined,
         }),
       });
       const result = await response.json();
-      if (response.status === 428 && result.code === "challenge_required") {
-        setChallengeRequired(true);
-        setError("");
-        return;
-      }
       if (!response.ok) throw new Error(result.error || "The analysis could not be completed.");
       setReport(result as AnalysisReport);
       setStatus((current) => current ? { ...current, qlooConfigured: true } : current);
-      setChallengeRequired(false);
-      setTurnstileToken("");
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "The analysis could not be completed.");
-      if (turnstileWidgetId.current && window.turnstile) window.turnstile.reset(turnstileWidgetId.current);
-      setTurnstileToken("");
     } finally {
       setLoading(false);
     }
@@ -168,8 +109,6 @@ export default function Home() {
     setSignalText("Kinfolk, Blue Bottle Coffee, The Row");
     setCampaignA("");
     setCampaignB("");
-    setChallengeRequired(false);
-    setTurnstileToken("");
     setReport(createDemoReport());
   }
 
@@ -268,15 +207,11 @@ export default function Home() {
                   <input id="company-website" name="companyWebsite" tabIndex={-1} autoComplete="off" value={companyWebsite} onChange={(event) => setCompanyWebsite(event.target.value)} />
                 </div>
 
-                {challengeRequired && <div className="challenge-box"><div><strong>Quick check before continuing</strong><span>This only appears after several analyses in a short period.</span></div>{turnstileEnabled ? <div className="turnstile-widget" ref={turnstileContainer} /> : <span className="challenge-unavailable">Please wait before trying again.</span>}</div>}
-
-                {turnstileEnabled && <Script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" strategy="afterInteractive" onLoad={() => setTurnstileReady(true)} />}
-
                 {status && !status.analysisEnabled && <div className="analysis-paused">Live analysis is paused. Example reports remain available.</div>}
 
-                <button className="analyze-button" type="submit" disabled={loading || status?.analysisEnabled === false || (challengeRequired && !turnstileToken)}>
+                <button className="analyze-button" type="submit" disabled={loading || status?.analysisEnabled === false}>
                   {loading ? <span className="button-spinner" /> : <Icon name="sparkle" size={17} />}
-                  {loading ? "Reading market signals…" : challengeRequired ? turnstileToken ? "Continue analysis" : "Complete quick check" : "Check market signals"}
+                  {loading ? "Reading market signals…" : "Check market signals"}
                   {!loading && <span className="button-arrow">↗</span>}
                 </button>
                 <div className="secure-note"><span className="secure-lock">⌑</span> Queries go to Qloo and, when enabled, the AI provider. Don’t enter personal or confidential information; reports aren’t saved.</div>
