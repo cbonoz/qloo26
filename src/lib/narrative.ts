@@ -1,8 +1,10 @@
-import type { AnalysisReport, CampaignAssessment } from "./types";
-import { createFallbackNarrative } from "./analysis";
+import type { AnalysisReport, CampaignAssessment, ConceptIdea } from "./types";
+import { createFallbackNarrative, createFallbackConceptIdeas } from "./analysis";
+import { requestXaiJson } from "./xai";
 
 type Narrative = ReturnType<typeof createFallbackNarrative> & {
   comparison?: [CampaignAssessment, CampaignAssessment];
+  conceptIdeas?: ConceptIdea[];
 };
 
 const narrativeSchema = {
@@ -31,58 +33,83 @@ const narrativeSchema = {
         additionalProperties: false,
       },
     },
+    conceptIdeas: {
+      type: "array",
+      maxItems: 3,
+      items: {
+        type: "object",
+        properties: {
+          name: { type: "string" },
+          score: { type: "number", minimum: 0, maximum: 100 },
+          rationale: { type: "string" },
+          firstTest: { type: "string" },
+        },
+        required: ["name", "score", "rationale", "firstTest"],
+        additionalProperties: false,
+      },
+    },
   },
-  required: ["summary", "strengths", "risks", "recommendations", "comparison"],
+  required: ["summary", "strengths", "risks", "recommendations", "comparison", "conceptIdeas"],
   additionalProperties: false,
 } as const;
 
-function responseText(payload: unknown) {
-  if (!payload || typeof payload !== "object") return "";
-  const output = (payload as { output?: unknown }).output;
-  if (!Array.isArray(output)) return "";
-  return output
-    .flatMap((item) => {
-      if (!item || typeof item !== "object") return [];
-      const content = (item as { content?: unknown }).content;
-      return Array.isArray(content) ? content : [];
-    })
-    .map((item) => item && typeof item === "object" ? (item as { text?: unknown }).text : null)
-    .filter((text): text is string => typeof text === "string")
-    .join("\n");
+const narrativeSystemPrompt = [
+  "You are a cautious market-entry cultural analyst for LaunchLens. Use only the supplied Qloo evidence. Never invent affinities, demographics, local market demand, or causal claims. Frame promising connections and gaps as hypotheses to investigate, not as go/no-go conclusions.",
+  "Write tight copy: the summary under 60 words, each strength, risk, and recommendation under 30 words, each rationale under 40 words, and each first test under 25 words.",
+  "Give exactly three recommendations that describe research or validation steps, not campaign ideas.",
+  "If two campaign options are supplied: return one comparison assessment per option, in the order supplied. Each rationale must say why that option fits the supplied Qloo evidence better or worse than the other option, and the scores must separate the options when one is genuinely stronger. Return an empty conceptIdeas list.",
+  "If no campaign options are supplied: return an empty comparison list and exactly three conceptIdeas, ranked best first. Each conceptIdea is a concrete, testable campaign idea for this brand in this market, with a name, a score estimate, a rationale that cites the supplied evidence, and a firstTest describing the smallest test that would validate it.",
+  "If the team supplied a goal, keep every idea in service of that goal.",
+  "Scores for campaign options and ideas are heuristic judgments based on the supplied evidence, not Qloo scores or market predictions.",
+].join(" ");
+
+function truncate(value: string, maxLength: number) {
+  if (value.length <= maxLength) return value;
+  const cut = value.slice(0, maxLength);
+  const lastSpace = cut.lastIndexOf(" ");
+  return `${(lastSpace > 0 ? cut.slice(0, lastSpace) : cut).trim()}…`;
 }
 
-function parseNarrative(text: string): Partial<Narrative> | null {
-  try {
-    const start = text.indexOf("{");
-    const end = text.lastIndexOf("}");
-    if (start < 0 || end <= start) return null;
-    const value = JSON.parse(text.slice(start, end + 1)) as Record<string, unknown>;
-    const strings = (field: string) => Array.isArray(value[field])
-      ? value[field].filter((item): item is string => typeof item === "string").slice(0, 4)
-      : undefined;
-    const summary = typeof value.summary === "string" ? value.summary.slice(0, 500) : undefined;
-    const comparison = Array.isArray(value.comparison)
-      ? value.comparison.slice(0, 2).flatMap((item): CampaignAssessment[] => {
-          if (!item || typeof item !== "object") return [];
-          const option = item as Record<string, unknown>;
-          if (typeof option.name !== "string" || typeof option.rationale !== "string" || typeof option.score !== "number") return [];
-          return [{
-            name: option.name.slice(0, 180),
-            score: Math.max(0, Math.min(100, Math.round(option.score))),
-            rationale: option.rationale.slice(0, 400),
-          }];
-        })
-      : [];
-    return {
-      summary,
-      strengths: strings("strengths"),
-      risks: strings("risks"),
-      recommendations: strings("recommendations"),
-      comparison: comparison.length === 2 ? comparison as [CampaignAssessment, CampaignAssessment] : undefined,
-    };
-  } catch {
-    return null;
-  }
+function parseNarrative(payload: Record<string, unknown> | null): Partial<Narrative> | null {
+  if (!payload) return null;
+  const strings = (field: string) => Array.isArray(payload[field])
+    ? (payload[field] as unknown[]).filter((item): item is string => typeof item === "string").slice(0, 4)
+    : undefined;
+  const summary = typeof payload.summary === "string" ? truncate(payload.summary, 600) : undefined;
+  const comparison = Array.isArray(payload.comparison)
+    ? payload.comparison.slice(0, 2).flatMap((item): CampaignAssessment[] => {
+        if (!item || typeof item !== "object") return [];
+        const option = item as Record<string, unknown>;
+        if (typeof option.name !== "string" || typeof option.rationale !== "string" || typeof option.score !== "number") return [];
+        return [{
+          name: truncate(option.name, 180),
+          score: Math.max(0, Math.min(100, Math.round(option.score))),
+          rationale: truncate(option.rationale, 400),
+        }];
+      })
+    : [];
+  const conceptIdeas = Array.isArray(payload.conceptIdeas)
+    ? payload.conceptIdeas.slice(0, 3).flatMap((item): ConceptIdea[] => {
+        if (!item || typeof item !== "object") return [];
+        const option = item as Record<string, unknown>;
+        if (typeof option.name !== "string" || typeof option.rationale !== "string") return [];
+        const score = typeof option.score === "number" ? Math.max(0, Math.min(100, Math.round(option.score))) : null;
+        return [{
+          name: truncate(option.name, 120),
+          score,
+          rationale: truncate(option.rationale, 400),
+          firstTest: typeof option.firstTest === "string" ? truncate(option.firstTest, 240) : "",
+        }];
+      })
+    : [];
+  return {
+    summary,
+    strengths: strings("strengths"),
+    risks: strings("risks"),
+    recommendations: strings("recommendations"),
+    comparison: comparison.length === 2 ? comparison as [CampaignAssessment, CampaignAssessment] : undefined,
+    conceptIdeas: conceptIdeas.length > 0 ? conceptIdeas : undefined,
+  };
 }
 
 export async function createNarrative(
@@ -90,84 +117,51 @@ export async function createNarrative(
   campaigns?: [string, string],
 ): Promise<Narrative & { aiAssisted: boolean }> {
   const fallback = createFallbackNarrative(report);
-  const apiKey = process.env.XAI_API_KEY;
-  if (!apiKey) {
-    return {
-      ...fallback,
-      ...(campaigns ? { comparison: fallbackCampaignComparison(campaigns) } : {}),
-      aiAssisted: false,
-    };
-  }
+  const fallbackIdeas = createFallbackConceptIdeas(report);
+  const fallbackNarrative = {
+    ...fallback,
+    ...(campaigns ? { comparison: fallbackCampaignComparison(campaigns) } : { conceptIdeas: fallbackIdeas }),
+    aiAssisted: false,
+  };
 
-  try {
-    const response = await fetch("https://api.x.ai/v1/responses", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: process.env.XAI_MODEL || "grok-4.7",
-        store: false,
-        input: [
-          {
-            role: "system",
-            content:
-              "You are a cautious market-entry cultural analyst for LaunchLens. Use only the supplied Qloo evidence. Never invent affinities, demographics, local market demand, or causal claims. Frame promising connections and gaps as hypotheses to investigate, not as go/no-go conclusions. Give exactly three recommendations. If campaign options are present, return one comparison assessment per option; otherwise return an empty comparison list. Scores for campaign options are heuristic judgments based on the supplied evidence, not Qloo scores or market predictions.",
-          },
-          {
-            role: "user",
-            content: JSON.stringify({
-              brand: report.brand.name,
-              targetMarket: report.market,
-              qlooResolvedMarket: report.marketResolved,
-              audienceSignals: report.audienceSignals,
-              qlooScore: report.score,
-              directHits: `${report.directHits}/${report.signalCount}`,
-              qlooEvidence: report.evidence.map((item) => ({
-                signalName: item.name,
-                targetBrandRank: item.targetRank === null ? null : item.targetRank + 1,
-                relatedBrands: item.relatedBrands.slice(0, 8).map((brand) => brand.name),
-              })),
-              campaignOptions: campaigns,
-            }),
-          },
-        ],
-        text: {
-          format: {
-            type: "json_schema",
-            name: "launchlens_market_entry_report",
-            strict: true,
-            schema: narrativeSchema,
-          },
-        },
-        max_output_tokens: 900,
-      }),
-      signal: AbortSignal.timeout(20_000),
-      cache: "no-store",
-    });
-    if (!response.ok) throw new Error(`xAI returned ${response.status}`);
-    const parsed = parseNarrative(responseText(await response.json()));
-    if (!parsed?.summary || !parsed.recommendations?.length) throw new Error("Narrative response was incomplete");
-    return {
-      ...fallback,
-      ...parsed,
-      ...(campaigns ? { comparison: parsed.comparison ?? fallbackCampaignComparison(campaigns) } : {}),
-      aiAssisted: true,
-    };
-  } catch {
-    return {
-      ...fallback,
-      ...(campaigns ? { comparison: fallbackCampaignComparison(campaigns) } : {}),
-      aiAssisted: false,
-    };
-  }
+  const parsed = parseNarrative(await requestXaiJson({
+    system: narrativeSystemPrompt,
+    user: JSON.stringify({
+      brand: report.brand.name,
+      targetMarket: report.market,
+      qlooResolvedMarket: report.marketResolved,
+      goal: report.goal ?? null,
+      qlooScore: report.score,
+      qlooEvidence: report.evidence.map((item) => ({
+        referenceName: item.name,
+        targetBrandRank: item.targetRank === null ? null : item.targetRank + 1,
+        relatedBrands: item.relatedBrands.map((brand) => brand.name),
+      })),
+      campaignOptions: campaigns ?? null,
+    }),
+    schema: narrativeSchema,
+    schemaName: "launchlens_market_entry_report",
+    maxOutputTokens: 1600,
+    timeoutMs: 45_000,
+    reasoningEffort: "low",
+  }));
+
+  if (!parsed?.summary || !parsed.recommendations?.length) return fallbackNarrative;
+
+  return {
+    ...fallback,
+    ...parsed,
+    ...(campaigns
+      ? { comparison: parsed.comparison ?? fallbackCampaignComparison(campaigns) }
+      : { conceptIdeas: parsed.conceptIdeas?.length ? parsed.conceptIdeas : fallbackIdeas }),
+    aiAssisted: true,
+  };
 }
 
 function fallbackCampaignComparison(campaigns: [string, string]): [CampaignAssessment, CampaignAssessment] {
   return campaigns.map((name) => ({
     name,
     score: 50,
-    rationale: "Add XAI_API_KEY to generate an AI-assisted comparison grounded in the live Qloo evidence. This neutral placeholder is not a Qloo score.",
+    rationale: "This idea was not AI-scored. Use the Qloo evidence to shape a small test, then validate it with your audience.",
   })) as [CampaignAssessment, CampaignAssessment];
 }

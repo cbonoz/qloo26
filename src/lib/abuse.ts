@@ -111,7 +111,8 @@ export async function checkSharedAnonymousAnalysisLimit(
   const appKey = process.env.KEYVALUE_APP_KEY?.trim();
   if (!appKey) return undefined;
 
-  const key = `ll:v1:${utcDay(now)}:${identifier.slice(0, 32)}`;
+  // Keep the path key URL-safe: the counter service rejects encoded colons in URL paths.
+  const key = `ll-v1-${utcDay(now)}-${identifier.slice(0, 32)}`;
   const encodedKey = encodeURIComponent(key);
   const encodedAppKey = encodeURIComponent(appKey);
   const retryAfterSeconds = secondsUntilNextUtcDay(now);

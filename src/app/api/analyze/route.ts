@@ -8,6 +8,7 @@ import type { AnalysisReport, SignalEvidence } from "@/lib/types";
 type RequestBody = {
   brand?: unknown;
   market?: unknown;
+  goal?: unknown;
   signals?: unknown;
   campaignA?: unknown;
   campaignB?: unknown;
@@ -84,11 +85,13 @@ export async function POST(request: Request) {
 
   const brandQuery = cleanText(body.brand, 100);
   const marketQuery = cleanText(body.market, 100);
+  const goalQuery = cleanText(body.goal, 400);
   const rawSignals = Array.isArray(body.signals) ? body.signals : [];
   if (exceedsTextLimit(body.brand, 100)) return jsonError("Brand or product names must be 100 characters or fewer.", 400, "brand_too_long");
   if (exceedsTextLimit(body.market, 100)) return jsonError("Market names must be 100 characters or fewer.", 400, "market_too_long");
-  if (rawSignals.length > 4) return jsonError("Use no more than four audience cues in one analysis.", 400, "too_many_signals");
-  if (rawSignals.some((signal) => exceedsTextLimit(signal, 80))) return jsonError("Each audience cue must be 80 characters or fewer.", 400, "signal_too_long");
+  if (exceedsTextLimit(body.goal, 400)) return jsonError("Your goal must be 400 characters or fewer.", 400, "goal_too_long");
+  if (rawSignals.length > 4) return jsonError("Use no more than four cultural references in one analysis.", 400, "too_many_signals");
+  if (rawSignals.some((signal) => exceedsTextLimit(signal, 80))) return jsonError("Each cultural reference must be 80 characters or fewer.", 400, "signal_too_long");
   const signals = Array.isArray(body.signals)
     ? [...new Set(body.signals.map((item) => cleanText(item, 80)).filter(Boolean))]
     : [];
@@ -100,7 +103,8 @@ export async function POST(request: Request) {
 
   if (!brandQuery) return jsonError("Enter a brand or product to analyze.", 400, "missing_brand");
   if (!marketQuery) return jsonError("Enter a target market, such as a city or region.", 400, "missing_market");
-  if (signals.length < 2) return jsonError("Add at least two audience cues so Qloo can compare cultural signals.", 400, "too_few_signals");
+  if (!goalQuery) return jsonError("Describe what you are trying to do in this market.", 400, "missing_goal");
+  if (signals.length < 2) return jsonError("Add at least two cultural references, such as artists, films, brands, or places.", 400, "too_few_signals");
   if (Boolean(campaignA) !== Boolean(campaignB)) {
     return jsonError("Enter both campaign options, or leave both blank.", 400, "incomplete_comparison");
   }
@@ -147,7 +151,7 @@ export async function POST(request: Request) {
     if (resolvedSeeds.length < 2) {
       const unresolved = seedMatches.filter((item) => item.matches.length === 0).map((item) => item.input);
       return jsonError(
-        `Qloo resolved fewer than two audience cues${unresolved.length ? `; not found: ${unresolved.join(", ")}` : ""}. Try specific artist, film, brand, or place names.`,
+        `Fewer than two cultural references could be resolved${unresolved.length ? `; not found: ${unresolved.join(", ")}` : ""}. Try specific artist, film, brand, or place names.`,
         422,
         "signals_not_found",
       );
@@ -165,7 +169,8 @@ export async function POST(request: Request) {
         input,
         name: entity.name,
         entityId: entity.entityId,
-        relatedBrands: brands.map((item, index) => ({ name: item.name, entityId: item.entityId, rank: index + 1 })),
+        relatedBrands: brands.slice(0, 8).map((item, index) => ({ name: item.name, rank: index + 1 })),
+        relatedBrandCount: brands.length,
         targetRank: targetIndex === -1 ? null : targetIndex,
       };
       return { evidence, locality };
@@ -179,6 +184,7 @@ export async function POST(request: Request) {
       brand,
       market: marketQuery,
       marketResolved,
+      goal: goalQuery,
       audienceSignals: evidenceResults.map((item) => item.name),
       score,
       directHits,

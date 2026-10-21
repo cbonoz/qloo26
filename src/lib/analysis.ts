@@ -1,4 +1,4 @@
-import type { AnalysisReport, SignalEvidence } from "@/lib/types";
+import type { AnalysisReport, ConceptIdea, SignalEvidence } from "@/lib/types";
 
 export function calculateAlignmentScore(evidence: SignalEvidence[]) {
   if (evidence.length === 0) {
@@ -8,7 +8,7 @@ export function calculateAlignmentScore(evidence: SignalEvidence[]) {
   const directHits = evidence.filter((item) => item.targetRank !== null).length;
   const normalizedRanks = evidence.map((item) => {
     if (item.targetRank === null) return 0;
-    const resultCount = Math.max(item.relatedBrands.length, 1);
+    const resultCount = Math.max(item.relatedBrandCount, 1);
     return Math.max(0, 1 - item.targetRank / resultCount);
   });
 
@@ -46,11 +46,8 @@ export function createDemoReport(): AnalysisReport {
       input: signal.input,
       name: signal.name,
       entityId: signal.entityId,
-      relatedBrands: signal.brands.map((name, index) => ({
-        name,
-        entityId: `demo-${name.toLowerCase().replaceAll(" ", "-")}`,
-        rank: index + 1,
-      })),
+      relatedBrands: signal.brands.map((name, index) => ({ name, rank: index + 1 })),
+      relatedBrandCount: signal.brands.length,
       targetRank: targetIndex === -1 ? null : targetIndex,
     };
   });
@@ -66,10 +63,10 @@ export function createDemoReport(): AnalysisReport {
     directHits,
     signalCount: evidence.length,
     summary:
-      "In this illustrative example, Aesop appears in location-aware related-brand results for all three culture cues in Tokyo. Treat this as a demo of the report format, not live Qloo research or evidence of market demand.",
+      "In this illustrative example, Aesop appears in location-aware related-brand results for all three cultural references in Tokyo. Treat this as a demo of the report format, not live Qloo research or evidence of market demand.",
     strengths: [
-      "Design-led, considered brand associations appear across all three sample cues.",
-      "The sample audience signals span independent publishing, specialty coffee, and luxury fashion.",
+      "Design-led, considered brand associations appear across all three sample references.",
+      "The sample references span independent publishing, specialty coffee, and luxury fashion.",
     ],
     risks: [
       "The sample does not represent a measured audience segment, market demand, or campaign outcome.",
@@ -78,7 +75,7 @@ export function createDemoReport(): AnalysisReport {
     recommendations: [
       "Build a restrained, editorial partnership concept around design and daily rituals.",
       "Test a small-format experience with a specialty coffee partner before scaling.",
-      "Use the audience’s fashion cue as a creative direction, not as a claim about demographics.",
+      "Use the audience’s fashion reference as a creative direction, not as a claim about demographics.",
     ],
     evidence,
     aiAssisted: false,
@@ -100,27 +97,70 @@ export function createFallbackNarrative(report: AnalysisReport): Pick<
 
   return {
     summary: strongest
-      ? `${report.brand.name} appears in Qloo's location-aware related-brand results for ${matched.length} of ${audienceEvidence.length} culture cues in ${marketLabel}. Its strongest observed overlap is with ${strongest.name} (rank ${strongest.targetRank! + 1}). These are hypotheses to investigate, not evidence of market demand or campaign performance.`
-      : `Qloo did not return ${report.brand.name} in the top location-aware related-brand results for these culture cues in ${marketLabel}. This is a gap to investigate, not proof the audience will reject the brand.`,
+      ? `${report.brand.name} appears in Qloo's location-aware related-brand results for ${matched.length} of ${audienceEvidence.length} cultural references in ${marketLabel}. Its strongest observed overlap is with ${strongest.name} (rank ${strongest.targetRank! + 1}). These are hypotheses to investigate, not evidence of market demand or campaign performance.`
+      : `Qloo did not return ${report.brand.name} in the top location-aware related-brand results for these cultural references in ${marketLabel}. This is a gap to investigate, not proof the audience will reject the brand.`,
     strengths: matched.length
       ? matched.slice(0, 3).map(
           (item) => `${report.brand.name} appears among the related brands for ${item.name} (rank ${item.targetRank! + 1}).`,
         )
-      : ["The selected audience cues resolved successfully and can be used to explore adjacent cultural territory."],
+      : ["The selected cultural references resolved successfully and can be used to explore adjacent cultural territory."],
     risks: [
       matched.length < audienceEvidence.length
-        ? `Potential gap to investigate: direct brand overlap was found for ${matched.length} of ${audienceEvidence.length} culture cues in ${marketLabel}.`
+        ? `Potential gap to investigate: direct brand overlap was found for ${matched.length} of ${audienceEvidence.length} cultural references in ${marketLabel}.`
         : `This is a small set of location-aware cultural signals for ${marketLabel}; it does not measure local awareness, demand, or distribution readiness.`,
       "Affinity rankings describe cultural association, not causation, reach, or likely sales lift.",
     ],
     recommendations: [
       adjacent.length
         ? `Explore a partnership or creative adjacency with ${adjacent[0]} in ${report.market}, then validate the hypothesis with local audience research.`
-        : "Test a small, low-risk creative concept with the strongest matching audience cue.",
+        : "Test a small, low-risk creative concept with the strongest matching cultural reference.",
       strongest
         ? `Use ${strongest.name} as a starting point for a culturally grounded creative brief, without implying endorsement.`
-        : "Try adding more specific artist, film, brand, or place cues to uncover stronger cultural connections.",
+        : "Try adding more specific artist, film, brand, or place references to uncover stronger cultural connections.",
       "Run a small audience test before committing significant campaign spend.",
     ],
   };
+}
+
+/**
+ * Evidence-led first tests used when no model ranking is available. These are
+ * ranked by how directly the Qloo evidence supports them, not by a model score.
+ */
+export function createFallbackConceptIdeas(report: AnalysisReport): ConceptIdea[] {
+  const marketLabel = report.marketResolved || report.market;
+  const matched = report.evidence.filter((item) => item.targetRank !== null);
+  const strongest = [...matched].sort((a, b) => (a.targetRank ?? 0) - (b.targetRank ?? 0))[0];
+  const adjacent = report.evidence
+    .flatMap((item) => item.relatedBrands.slice(0, 3).map((brand) => brand.name))
+    .find((name) => name.toLowerCase() !== report.brand.name.toLowerCase());
+  const ideas: ConceptIdea[] = [];
+
+  if (strongest) {
+    ideas.push({
+      name: `A first test built around ${strongest.name}`,
+      score: null,
+      rationale: `${report.brand.name} ranks #${strongest.targetRank! + 1} in the location-aware related-brand results for ${strongest.name} in ${marketLabel}. It is the strongest observed overlap in this brief.`,
+      firstTest: `Run one low-cost concept with an audience that already engages with ${strongest.name}, and measure response before scaling spend.`,
+    });
+  }
+
+  if (adjacent) {
+    ideas.push({
+      name: `A collaboration with ${adjacent}`,
+      score: null,
+      rationale: `${adjacent} appears alongside ${report.brand.name} in the related-brand results for these references in ${marketLabel}, so it is an adjacent brand worth exploring.`,
+      firstTest: `Approach ${adjacent} with one concrete collaboration and a small, measurable pilot in ${marketLabel}.`,
+    });
+  }
+
+  ideas.push({
+    name: "A small audience test before any launch spend",
+    score: null,
+    rationale: matched.length < report.evidence.length
+      ? `${report.brand.name} only appeared for ${matched.length} of ${report.evidence.length} references in ${marketLabel}. The gaps are the fastest thing to close with direct feedback.`
+      : `The references returned clear signals for ${marketLabel}, but they still describe cultural association rather than purchase intent.`,
+    firstTest: `Interview a handful of people in ${marketLabel} about ${report.brand.name}, and turn their answers into one testable proposition.`,
+  });
+
+  return ideas.slice(0, 3);
 }

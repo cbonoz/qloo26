@@ -6,9 +6,9 @@ export function LandingPage({ onStart }: { onStart: () => void }) {
     <>
       <section className="landing-hero">
         <div className="landing-copy">
-          <div className="eyebrow"><span className="eyebrow-line" />CULTURAL CONTEXT FOR WHAT’S NEXT</div>
-          <h1>Enter new markets<br />with <em>more context.</em></h1>
-          <p>Find the cultural connections—and gaps—between your brand and a target market. LaunchLens uses Qloo data to turn them into hypotheses your team can test before investing.</p>
+          <div className="eyebrow"><span className="eyebrow-line" />FOR MARKETERS ENTERING NEW MARKETS</div>
+          <h1>Choose your next<br /><em>marketing move.</em></h1>
+          <p>Too many ideas, limited budget? Use cultural connections and gaps to choose what activity to test first—and why—before investing in a new market.</p>
           <div className="landing-actions">
             <button className="landing-primary-button" type="button" onClick={onStart}>Start a market check <Icon name="arrow" size={16} /></button>
             <a className="landing-secondary-link" href="#how-it-works">How it works <span>↓</span></a>
@@ -38,13 +38,13 @@ export function LandingPage({ onStart }: { onStart: () => void }) {
 
       <section className="landing-how" id="how-it-works">
         <div className="landing-section-heading">
-          <div><span className="small-kicker">HOW IT WORKS</span><h2>Make the next move<br />with cultural context.</h2></div>
-          <p>Use cultural signals to ask sharper questions before you invest.</p>
+          <div><span className="small-kicker">HOW IT WORKS</span><h2>Find a smarter<br />first test.</h2></div>
+          <p>When you can’t fund every idea, use signals to choose where to start.</p>
         </div>
         <div className="landing-feature-grid">
-          <article className="landing-feature-card"><span className="landing-feature-number">01</span><span className="landing-feature-icon"><Icon name="report" size={17} /></span><h3>Ground your brief</h3><p>Choose a brand, market, and 2–4 audience cues.</p></article>
-          <article className="landing-feature-card"><span className="landing-feature-number">02</span><span className="landing-feature-icon"><Icon name="users" size={17} /></span><h3>See the connections</h3><p>Explore Qloo’s location-aware cultural signals.</p></article>
-          <article className="landing-feature-card"><span className="landing-feature-number">03</span><span className="landing-feature-icon"><Icon name="sparkle" size={17} /></span><h3>Find ideas to test</h3><p>Turn patterns into hypotheses—not promises.</p></article>
+          <article className="landing-feature-card"><span className="landing-feature-number">01</span><span className="landing-feature-icon"><Icon name="report" size={17} /></span><h3>Ground your brief</h3><p>Name a brand, a market, and what you want to do there.</p></article>
+          <article className="landing-feature-card"><span className="landing-feature-number">02</span><span className="landing-feature-icon"><Icon name="users" size={17} /></span><h3>See the connections</h3><p>We suggest the cultural references to test, then explore Qloo’s location-aware signals.</p></article>
+          <article className="landing-feature-card"><span className="landing-feature-number">03</span><span className="landing-feature-icon"><Icon name="sparkle" size={17} /></span><h3>Choose what to test</h3><p>Get a clear recommendation on your two ideas—or ranked first tests if you have none.</p></article>
         </div>
       </section>
 

@@ -45,7 +45,9 @@ describe("anonymous analysis limits", () => {
   it("uses the configured shared counter to enforce the same daily cap", async () => {
     vi.stubEnv("KEYVALUE_APP_KEY", "test-app-key");
     let storedCount = 0;
-    const fetchMock = vi.fn(async (_input: string | URL | Request, init?: RequestInit) => {
+    const requestedUrls: string[] = [];
+    const fetchMock = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
+      requestedUrls.push(String(input));
       if (init?.method === "POST") {
         storedCount += 1;
         return new Response("ok", { status: 200 });
@@ -63,6 +65,7 @@ describe("anonymous analysis limits", () => {
       reason: "daily_limit",
     });
     expect(storedCount).toBe(3);
+    expect(requestedUrls.every((url) => !url.includes("%3A"))).toBe(true);
   });
 
   it("identifies anonymous visitors with a salted IP and User-Agent digest", () => {

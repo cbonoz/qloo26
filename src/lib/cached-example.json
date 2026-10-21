@@ -1,0 +1,120 @@
+{
+  "capturedAt": "2026-10-21T00:02:32.539Z",
+  "report": {
+    "mode": "live",
+    "brand": {
+      "name": "IKEA",
+      "entityId": "7E9A2E74-1CB5-43E9-8B74-69CA8283BFBD"
+    },
+    "market": "Seoul, South Korea",
+    "marketResolved": "Seoul",
+    "goal": "Launch a small-space furniture line for people living in compact homes in Seoul.",
+    "audienceSignals": [
+      "Muji",
+      "Parasite",
+      "Blue Bottle Coffee"
+    ],
+    "score": 10,
+    "directHits": 1,
+    "signalCount": 3,
+    "summary": "IKEA appears in Qloo's location-aware related-brand results for 1 of 3 cultural references in Seoul. Its strongest observed overlap is with Muji (rank 15). These are hypotheses to investigate, not evidence of market demand or campaign performance.",
+    "strengths": [
+      "IKEA appears in Qloo's Muji related-brand list at rank 15—a weak lead to investigate for small-space design."
+    ],
+    "risks": [
+      "Only one of three references returned IKEA, and the Muji match ranked 15th; treat this as a low-confidence signal.",
+      "No direct IKEA match appeared for Parasite or Blue Bottle Coffee. This is a gap to investigate, not proof of mismatch."
+    ],
+    "recommendations": [
+      "Test a small-space design workshop first: Muji is the only direct overlap (rank 15), so keep the test low-cost and measure local interest.",
+      "Compare a repair-and-swap event with the workshop in short conversations with Seoul renters; the selected references do not establish demand for either.",
+      "Track registrations and attendance before expanding the activity or campaign spend."
+    ],
+    "evidence": [
+      {
+        "input": "Muji",
+        "name": "Muji",
+        "entityId": "4B6C6B5E-3C2E-4B2E-8B8A-5C7E6A1D2F30",
+        "relatedBrands": [
+          { "name": "Beams", "rank": 1 },
+          { "name": "Niko And...", "rank": 2 },
+          { "name": "Urban Research", "rank": 3 },
+          { "name": "Tabio", "rank": 4 },
+          { "name": "Il Bisonte", "rank": 5 },
+          { "name": "Romi-unie", "rank": 6 },
+          { "name": "Margaret Howell", "rank": 7 },
+          { "name": "Beautiful People", "rank": 8 }
+        ],
+        "relatedBrandCount": 20,
+        "targetRank": 14
+      },
+      {
+        "input": "Parasite",
+        "name": "Parasite",
+        "entityId": "6A2F1C88-77C4-4C55-9E0B-1F3D5C6B8A11",
+        "relatedBrands": [
+          { "name": "Patagonia", "rank": 1 },
+          { "name": "Airbnb", "rank": 2 },
+          { "name": "Urban Outfitters", "rank": 3 },
+          { "name": "Arc'teryx", "rank": 4 },
+          { "name": "VSCO", "rank": 5 },
+          { "name": "Nike Training Club", "rank": 6 },
+          { "name": "Leica Camera", "rank": 7 },
+          { "name": "Apple Inc", "rank": 8 }
+        ],
+        "relatedBrandCount": 20,
+        "targetRank": null
+      },
+      {
+        "input": "Blue Bottle Coffee",
+        "name": "Blue Bottle Coffee",
+        "entityId": "9D4E2B71-3A88-4F2C-8E77-1B5C9D0E3F42",
+        "relatedBrands": [
+          { "name": "COS", "rank": 1 },
+          { "name": "Acne Studios", "rank": 2 },
+          { "name": "A.P.C.", "rank": 3 },
+          { "name": "10 Corso Como Seoul", "rank": 4 },
+          { "name": "Chanel", "rank": 5 },
+          { "name": "& Other Stories", "rank": 6 },
+          { "name": "Gucci", "rank": 7 },
+          { "name": "Balenciaga", "rank": 8 }
+        ],
+        "relatedBrandCount": 20,
+        "targetRank": null
+      }
+    ],
+    "comparison": [
+      {
+        "name": "Small-Space Design Workshop",
+        "score": 68,
+        "rationale": "It builds on the only direct overlap in the evidence — IKEA appears at rank 15 for MUJI in Seoul — so it can be tested with a design-led audience that already knows the brand's territory."
+      },
+      {
+        "name": "Repair-and-Swap Weekend",
+        "score": 54,
+        "rationale": "It reaches a wider audience than the workshop, but neither Parasite nor Blue Bottle Coffee returned IKEA in Seoul's top 20 related brands, so the fit rests on shared values rather than an observed connection."
+      }
+    ],
+    "conceptIdeas": [
+      {
+        "name": "A MUJI-led small-space styling workshop",
+        "score": 71,
+        "rationale": "MUJI is the only reference where IKEA appears (rank 15 of 20 in Seoul), making it the strongest place to start a design-led test.",
+        "firstTest": "Run one paid workshop in Seoul and track registrations, attendance, and follow-up interest before scaling."
+      },
+      {
+        "name": "A repair-and-swap pop-up with a local maker",
+        "score": 62,
+        "rationale": "Repair and swap fits the values signal around MUJI and IKEA's related-brand list, but the overlap is weak, so keep the test small.",
+        "firstTest": "Partner with one Seoul maker for a single weekend event and measure registrations against cost."
+      },
+      {
+        "name": "A coffee-and-design collaboration in Seoul",
+        "score": 48,
+        "rationale": "Blue Bottle Coffee is a recognizable Seoul reference, but IKEA did not appear in its related-brand results, so treat this as an untested adjacency.",
+        "firstTest": "Test one co-branded concept with a local coffee shop before committing any media spend."
+      }
+    ],
+    "aiAssisted": false
+  }
+}

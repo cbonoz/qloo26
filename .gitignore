@@ -25,7 +25,8 @@
 *.pem
 prompt.md
 
-# temp
+# temp (keep ignored for now)
+*.tmp
 README.md
 
 # debug
