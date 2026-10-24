@@ -170,8 +170,8 @@ The campaign comparison step is optional. The main demo already has two example 
 
 The results show **Top ideas, ranked** with a first test for each, instead of a head-to-head verdict. The live model may return up to three; for example, the same IKEA/Seoul evidence can surface two deliberately different kinds of test:
 
-- **Reach-led: a compact-living content series with a Seoul creator** — use the MUJI overlap as a design-led audience signal, not a MUJI partnership. Produce three short videos and measure completion and saves before scaling spend.
-- **Community-led: a repair-and-swap pop-up with a local maker** — partner with one Seoul maker for a single weekend and measure registrations against cost.
+- **Reach-led: a compact-living content series with a local creator** — use the MUJI overlap as a design-led audience signal, not a MUJI partnership. Produce three short videos and measure completion and saves before scaling spend.
+- **Community-led: a repair-and-swap pop-up** — partner with one Seoul maker for a single weekend and measure registrations against cost.
 
 **Say:**
 
