@@ -40,7 +40,13 @@ const stepDetails: Record<SetupStep, { number: string; title: string; descriptio
   preview: { number: "04", title: "Review your brief", description: "Check your inputs before running the market check." },
 };
 
-const exampleReferences = ["MUJI", "Parasite", "Blue Bottle Coffee", "Seoul Forest"];
+const exampleReferences = [
+  { name: "MUJI", label: "MUJI (retail)" },
+  { name: "Parasite", label: "Parasite (film)" },
+  { name: "Blue Bottle Coffee", label: "Blue Bottle Coffee (food)" },
+  { name: "NewJeans", label: "NewJeans (music)" },
+  { name: "Gyeongbokgung", label: "Gyeongbokgung (landmark)" },
+];
 
 export function MarketCheckForm({
   step,
@@ -108,7 +114,7 @@ export function MarketCheckForm({
         <div className="section-number">{detail.number}</div>
         <div><h2>{detail.title}</h2><p>{detail.description}</p></div>
       </div>
-      {step === "market" && <div className="form-demo-row"><p className="form-demo-hint">Start blank, or load an example brief.</p><button className="fill-demo-button" type="button" onClick={onFillDemo} disabled={loading}><Icon name="sparkle" size={14} />Fill demo data</button></div>}
+      {step === "market" && <div className="form-demo-row"><p className="form-demo-hint">Start blank, or load an example brief.</p><button className="fill-demo-button" type="button" onClick={onFillDemo} disabled={loading || suggesting}><Icon name="sparkle" size={14} />Fill demo data</button></div>}
       <form onSubmit={onSubmit}>
         {step === "market" && <>
           <label className="field-label" htmlFor="brand">Brand or product <span className="required">*</span></label>
@@ -146,18 +152,18 @@ export function MarketCheckForm({
                 <strong>{reference.name}</strong>
                 {reference.why && <span>{reference.why}</span>}
               </div>
-              <button className="reference-remove" type="button" onClick={() => removeReference(reference.name)} aria-label={`Remove ${reference.name}`}>×</button>
+              <button className="reference-remove" type="button" onClick={() => removeReference(reference.name)} aria-label={`Remove ${reference.name}`} disabled={suggesting}>×</button>
             </li>
           ))}</ul>}
 
           <div className="reference-add">
-            <input id="reference-input" value={referenceInput} maxLength={200} disabled={atReferenceLimit} onChange={(event) => setReferenceInput(event.target.value)} onKeyDown={handleReferenceKeyDown} placeholder={atReferenceLimit ? "Maximum of four references" : "Add a name — separate several with commas"} />
-            <button type="button" onClick={() => { addReferences(referenceInput); setReferenceInput(""); }} disabled={atReferenceLimit || !referenceInput.trim()}>Add</button>
+            <input id="reference-input" value={referenceInput} maxLength={200} disabled={atReferenceLimit || suggesting} onChange={(event) => setReferenceInput(event.target.value)} onKeyDown={handleReferenceKeyDown} placeholder={atReferenceLimit ? "Maximum of four references" : "Add a name — separate several with commas"} />
+            <button type="button" onClick={() => { addReferences(referenceInput); setReferenceInput(""); }} disabled={atReferenceLimit || suggesting || !referenceInput.trim()}>Add</button>
           </div>
 
-          <div className="cue-examples"><span>Try:</span>{exampleReferences.map((reference) => {
-            const selected = references.some((item) => item.name.toLowerCase() === reference.toLowerCase());
-            return <button key={reference} type="button" onClick={() => addReferences(reference)} disabled={selected || atReferenceLimit} aria-pressed={selected}>{reference}</button>;
+          <div className="cue-examples"><span>Try:</span>{exampleReferences.map((example) => {
+            const selected = references.some((item) => item.name.toLowerCase() === example.name.toLowerCase());
+            return <button key={example.name} type="button" onClick={() => addReferences(example.name)} disabled={selected || atReferenceLimit || suggesting} aria-pressed={selected}>{example.label}</button>;
           })}</div>
         </>}
 
@@ -188,8 +194,8 @@ export function MarketCheckForm({
         {isFinalStep && analysisEnabled === false && !isCachedExample && <div className="analysis-paused">Live analysis is paused right now. You can still view the example from Overview.</div>}
 
         <div className="wizard-form-actions">
-          {step !== "market" && <button className="back-button" type="button" onClick={onBack} disabled={loading}>Back</button>}
-          <button className="analyze-button" type="submit" disabled={loading || (isFinalStep && analysisEnabled === false && !isCachedExample)}>
+          {step !== "market" && <button className="back-button" type="button" onClick={onBack} disabled={loading || suggesting}>Back</button>}
+          <button className="analyze-button" type="submit" disabled={loading || suggesting || (isFinalStep && analysisEnabled === false && !isCachedExample)}>
             {loading ? <span className="button-spinner" /> : <Icon name={isFinalStep ? "sparkle" : "arrow"} size={17} />}
             {loading ? "Reading market signals…" : isFinalStep && isCachedExample ? "View example report" : isFinalStep ? "Run market check" : "Continue"}
             {!loading && <span className="button-arrow">↗</span>}

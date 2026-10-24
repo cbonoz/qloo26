@@ -6,6 +6,7 @@ export function GET(request: Request) {
     qlooConfigured: Boolean(process.env.QLOO_API_KEY),
     xaiConfigured: Boolean(process.env.XAI_API_KEY),
     analysisEnabled: process.env.LAUNCHLENS_ANALYSIS_ENABLED !== "false",
+    sharedRateLimitConfigured: Boolean(process.env.KEYVALUE_APP_KEY?.trim()),
   }, {
     headers: {
       "Cache-Control": "no-store",

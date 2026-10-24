@@ -73,8 +73,10 @@ export async function requestXaiJson(request: XaiJsonRequest): Promise<Record<st
       signal: AbortSignal.timeout(request.timeoutMs ?? 20_000),
       cache: "no-store",
     });
-    // Older models reject the reasoning field — retry once without it.
-    if (!response.ok && request.reasoningEffort) {
+    // Older models may reject the reasoning field. Retry only when the request
+    // itself was rejected as invalid; retrying a rate limit or provider outage
+    // would double the cost without improving the chance of success.
+    if (!response.ok && request.reasoningEffort && (response.status === 400 || response.status === 422)) {
       response = await fetch(XAI_RESPONSES_URL, {
         method: "POST",
         headers: {

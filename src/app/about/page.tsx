@@ -78,7 +78,7 @@ export default function AboutPage() {
             </div>
             <div className={styles.evidenceBreakdown}>
               <article className={styles.valueCard}><span>01</span><div><h3>Location-aware</h3><p>The <code>query.localities.signal</code> resolves to Seoul. Every related-brand list is scoped to that market—not a global average.</p></div></article>
-              <article className={styles.valueCard}><span>02</span><div><h3>Cross-category</h3><p><code>signal.interests.entities</code> can be a brand, film, artist, or place. The same response shape works whether the reference is MUJI, Parasite, or Seoul Forest.</p></div></article>
+              <article className={styles.valueCard}><span>02</span><div><h3>Cross-category</h3><p><code>signal.interests.entities</code> can be a brand, film, artist, or place. The same response shape works whether the reference is MUJI, Parasite, or Gyeongbokgung.</p></div></article>
               <article className={styles.valueCard}><span>03</span><div><h3>Ranked, not binary</h3><p>LaunchLens looks for the target brand in <code>results.entities</code> and records its position. #15 is a weak signal; <code>null</code> is a gap to investigate—not a rejection.</p></div></article>
               <p className={styles.evidenceNote}>Qloo retrieves the evidence. LaunchLens and the AI provider interpret it; the recommendation is not a Qloo score.</p>
             </div>

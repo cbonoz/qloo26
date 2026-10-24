@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { SiteFooter } from "@/components/site-footer";
 import { Icon } from "@/components/launch-lens/icon";
@@ -70,6 +70,8 @@ export default function Home() {
   const [error, setError] = useState("");
   const [companyWebsite, setCompanyWebsite] = useState("");
   const [draftRestored, setDraftRestored] = useState(false);
+  const analyzeInFlight = useRef(false);
+  const suggestionsInFlight = useRef(false);
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => {
@@ -152,6 +154,7 @@ export default function Home() {
   }
 
   async function suggestReferences() {
+    if (suggestionsInFlight.current || analyzeInFlight.current) return;
     if (!brand.trim() || !market.trim()) {
       setError("Enter a brand and a target market first.");
       return;
@@ -160,6 +163,7 @@ export default function Home() {
       setError("Describe what you are trying to do in this market first.");
       return;
     }
+    suggestionsInFlight.current = true;
     setSuggesting(true);
     setError("");
     try {
@@ -182,12 +186,14 @@ export default function Home() {
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Could not suggest cultural references.");
     } finally {
+      suggestionsInFlight.current = false;
       setSuggesting(false);
     }
   }
 
   async function analyze(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (analyzeInFlight.current || suggestionsInFlight.current) return;
     setError("");
     if (currentStep === "market") {
       if (!brand.trim()) {
@@ -254,6 +260,7 @@ export default function Home() {
     }
 
     setLoading(true);
+    analyzeInFlight.current = true;
     try {
       const response = await fetch("/api/analyze", {
         method: "POST",
@@ -275,6 +282,7 @@ export default function Home() {
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "The analysis could not be completed.");
     } finally {
+      analyzeInFlight.current = false;
       setLoading(false);
     }
   }

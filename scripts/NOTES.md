@@ -57,12 +57,12 @@ LaunchLens is not an LLM with a mood board. **Qloo is the evidence layer that ma
    Expected shape:
 
    ```json
-   {"qlooConfigured":true,"xaiConfigured":true,"analysisEnabled":true}
+   {"qlooConfigured":true,"xaiConfigured":true,"analysisEnabled":true,"sharedRateLimitConfigured":true}
    ```
 
 3. Open `http://localhost:3000` in a fresh tab. A saved manual draft can reappear; click **New market check** if the form is prefilled.
 
-4. Use **Fill demo data** for the reliable path. It loads the bundled IKEA/Seoul snapshot and makes **no API call** when the brief is unchanged.
+4. Use **Fill demo data** for the reliable path. It loads the bundled IKEA/Seoul snapshot—including two example campaign ideas—and makes **no API call** when the brief is unchanged.
 
 5. Budget live runs. The app allows up to **3 analyses per IP per UTC day**. The cached demo does not count.
 
@@ -94,19 +94,19 @@ Point to the example card:
 
 ### 1:15–1:45 — Load the brief
 
-**Do:** Click **Start a market check**, then **Fill demo data**.
+**Do:** Click **Start a market check**, then **Fill demo data**. The button fills the brief with two example campaign ideas and opens the review step.
 
 **Say:**
 
-> “This is an IKEA Seoul brief. It’s cached: the unchanged brief opens a saved Qloo snapshot, so the demo still works if the API is slow.”
+> “This is an IKEA Seoul brief with two example ideas: a small-space design workshop and a repair-and-swap weekend. It’s cached: the unchanged brief opens a saved Qloo snapshot, so the demo still works if the API is slow.”
 
 ### 1:45–2:45 — Walk the inputs without breaking the cache
 
-**Do:** Click **Back** twice to reach the goal and cultural references, then click **Continue** twice to return to the review step.
+**Do:** Click **Back** once to **Campaign comparison** and point to the two prefilled ideas. Click **Back** once more to reach the goal and cultural references, then click **Continue** twice to return to the review step.
 
 **Say:**
 
-> “The goal is compact living. For cultural references, we’re using MUJI, Parasite, and Blue Bottle Coffee—not as claims about what everyone in Seoul likes, but as three starting points for Qloo’s check. Qloo returns related brands for each name in Seoul, and we look for IKEA in those results. Those matches and gaps become the evidence behind the recommendation. The two options are a small-space design workshop and a repair-and-swap event.”
+> “The goal is compact living. For cultural references, we’re using MUJI, Parasite, and Blue Bottle Coffee—not as claims about what everyone in Seoul likes, but as three starting points for Qloo’s check. Qloo returns related brands for each name in Seoul, and we look for IKEA in those results. Those matches and gaps become the evidence behind the recommendation. The two example ideas are **Small-Space Design Workshop** and **Repair-and-Swap Weekend**.”
 
 **Tip:** Do not edit a field while walking back. Navigating with Back/Continue preserves the cached demo. Any edit invalidates the snapshot and switches the final button to **Run market check**.
 
@@ -159,14 +159,19 @@ The live run usually takes 10–30 seconds. If time is short, skip this and use 
 
 ## Optional: show the “no ideas yet” path
 
-The campaign comparison step is optional. To show the second mode:
+The campaign comparison step is optional. The main demo already has two example ideas; this path shows the other mode, when the team has none. To show it:
 
 1. Start a new check.
 2. Enter a brand, market, goal, and 2–4 references.
 3. On **Campaign comparison**, leave both options blank.
 4. Continue to the review step and run the check.
 
-The results show **Top ideas, ranked** with a first test for each, instead of a head-to-head verdict.
+**Shortcut:** Load the demo brief (or click **Edit brief** from the result), click **Back** once to **Campaign comparison**, clear both fields, and continue. That edits the brief, so the review button changes to **Run market check** and the app makes a live Qloo call.
+
+The results show **Top ideas, ranked** with a first test for each, instead of a head-to-head verdict. The live model may return up to three; for example, the same IKEA/Seoul evidence can surface two deliberately different kinds of test:
+
+- **Reach-led: a compact-living content series with a Seoul creator** — use the MUJI overlap as a design-led audience signal, not a MUJI partnership. Produce three short videos and measure completion and saves before scaling spend.
+- **Community-led: a repair-and-swap pop-up with a local maker** — partner with one Seoul maker for a single weekend and measure registrations against cost.
 
 **Say:**
 

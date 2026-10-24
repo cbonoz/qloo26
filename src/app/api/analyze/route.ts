@@ -115,21 +115,23 @@ export async function POST(request: Request) {
 
   const bodyLimit = checkAnonymousAnalysisLimit(identifier, Date.now(), false);
   if (!bodyLimit.allowed) {
-    const message = bodyLimit.reason === "daily_limit" || bodyLimit.reason === "instance_limit"
-      ? "The anonymous analysis limit has been reached. Please try again tomorrow."
-      : "Too many requests. Please wait briefly before trying again.";
+    const message = bodyLimit.reason === "daily_limit"
+      ? `You’ve reached today’s limit of ${bodyLimit.limit ?? 3} analyses. Please try again tomorrow.`
+      : bodyLimit.reason === "instance_limit"
+        ? "This demo has reached its daily analysis limit. Please try again tomorrow."
+        : bodyLimit.reason === "global_limit"
+          ? `The shared daily limit of ${bodyLimit.limit ?? 500} analyses has been reached. Please try again tomorrow.`
+          : "Too many requests. Please wait briefly before trying again.";
     return jsonError(message, 429, bodyLimit.reason, bodyLimit.retryAfterSeconds);
   }
 
   try {
     const sharedLimit = await checkSharedAnonymousAnalysisLimit(identifier);
     if (sharedLimit && !sharedLimit.allowed) {
-      return jsonError(
-        "This visitor has reached the three-analysis daily limit. Please try again tomorrow.",
-        429,
-        sharedLimit.reason,
-        sharedLimit.retryAfterSeconds,
-      );
+      const message = sharedLimit.reason === "global_limit"
+        ? `The shared daily limit of ${sharedLimit.limit ?? 500} analyses has been reached. Please try again tomorrow.`
+        : `You’ve reached today’s limit of ${sharedLimit.limit ?? 3} analyses. Please try again tomorrow.`;
+      return jsonError(message, 429, sharedLimit.reason, sharedLimit.retryAfterSeconds);
     }
   } catch {
     return jsonError("Live analysis is temporarily unavailable because the usage limit could not be verified.", 503, "rate_limit_store_unavailable");

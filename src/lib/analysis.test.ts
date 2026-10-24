@@ -110,5 +110,6 @@ describe("createFallbackConceptIdeas", () => {
     expect(ideas[0].name).toContain("Sample reference");
     expect(ideas[0].score).toBeNull();
     expect(ideas[0].firstTest.length).toBeGreaterThan(0);
+    expect(ideas.some((idea) => /collaboration/i.test(idea.name))).toBe(false);
   });
 });

@@ -27,7 +27,7 @@ Only **Scenario 1** has a bundled snapshot and works without API credentials. Sc
 
 ### How the references are used
 
-These are starting points for Qloo’s related-brand check, not assumptions about what people in Seoul like and not a list to validate with an audience. They stand in for the cultural territory each campaign idea would enter. For each reference, Qloo returns a set of related brands in Seoul. LaunchLens records whether IKEA appears in that list and at what rank. A missing IKEA is recorded as a gap. The lists can include competitors or adjacent brands, but the check is about cultural overlap—not counting competitors.
+These are starting points for Qloo’s related-brand check, not assumptions about what people in Seoul like and not a list to validate with an audience. They stand in for the cultural territory each campaign idea would enter. For each reference, Qloo returns a set of related brands in Seoul. LaunchLens records whether IKEA appears in that list and at what rank. A missing IKEA is recorded as a gap. The lists can include competitors or adjacent brands, but the check is about cultural overlap—not counting competitors. A match is a signal to interpret, not a recommendation to partner with that brand—especially when it is a competitor.
 
 ### The two options
 

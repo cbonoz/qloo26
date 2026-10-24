@@ -1,13 +1,34 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   checkAnonymousAnalysisLimit,
+  checkAnonymousSuggestionLimit,
   checkSharedAnonymousAnalysisLimit,
+  checkSharedAnonymousUsageLimit,
   getAnonymousIdentifier,
   recordAnonymousAttempt,
   resetRateLimitsForTests,
 } from "./abuse";
 
-describe("anonymous analysis limits", () => {
+function mockSharedStore() {
+  const store = new Map<string, number>();
+  const requestedUrls: string[] = [];
+  const fetchMock = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
+    const url = new URL(String(input));
+    requestedUrls.push(String(input));
+    const parts = url.pathname.split("/").filter(Boolean);
+    const isIncrement = parts.at(-1) === "Increment";
+    const key = decodeURIComponent(isIncrement ? parts.at(-2) ?? "" : parts.at(-1) ?? "");
+    if (init?.method === "POST") {
+      store.set(key, (store.get(key) ?? 0) + 1);
+      return new Response("ok", { status: 200 });
+    }
+    return new Response(String(store.get(key) ?? 0), { status: 200 });
+  });
+  vi.stubGlobal("fetch", fetchMock);
+  return { store, requestedUrls, fetchMock };
+}
+
+describe("anonymous usage limits", () => {
   beforeEach(() => resetRateLimitsForTests());
   afterEach(() => {
     vi.unstubAllEnvs();
@@ -20,6 +41,31 @@ describe("anonymous analysis limits", () => {
       expect(checkAnonymousAnalysisLimit("visitor-a", start + index * 1000).allowed).toBe(true);
     }
     expect(checkAnonymousAnalysisLimit("visitor-a", start + 6000)).toMatchObject({
+      allowed: false,
+      reason: "daily_limit",
+      limit: 3,
+    });
+  });
+
+  it("allows ten reference suggestions per visitor per UTC day", () => {
+    const start = Date.UTC(2026, 0, 1);
+    for (let index = 0; index < 10; index += 1) {
+      expect(checkAnonymousSuggestionLimit("visitor-a", start + index * 1000).allowed).toBe(true);
+    }
+    expect(checkAnonymousSuggestionLimit("visitor-a", start + 11_000)).toMatchObject({
+      allowed: false,
+      reason: "daily_limit",
+      limit: 10,
+    });
+  });
+
+  it("does not spend the analysis budget when suggesting references", () => {
+    const start = Date.UTC(2026, 0, 1);
+    expect(checkAnonymousSuggestionLimit("visitor-a", start).allowed).toBe(true);
+    for (let index = 0; index < 3; index += 1) {
+      expect(checkAnonymousAnalysisLimit("visitor-a", start + index * 1000 + 1).allowed).toBe(true);
+    }
+    expect(checkAnonymousAnalysisLimit("visitor-a", start + 5000)).toMatchObject({
       allowed: false,
       reason: "daily_limit",
     });
@@ -42,19 +88,9 @@ describe("anonymous analysis limits", () => {
     expect(recordAnonymousAttempt("visitor-a", start + 31)).toMatchObject({ allowed: false });
   });
 
-  it("uses the configured shared counter to enforce the same daily cap", async () => {
+  it("uses the shared counter to enforce the visitor and global daily caps", async () => {
     vi.stubEnv("KEYVALUE_APP_KEY", "test-app-key");
-    let storedCount = 0;
-    const requestedUrls: string[] = [];
-    const fetchMock = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
-      requestedUrls.push(String(input));
-      if (init?.method === "POST") {
-        storedCount += 1;
-        return new Response("ok", { status: 200 });
-      }
-      return new Response(String(storedCount), { status: 200 });
-    });
-    vi.stubGlobal("fetch", fetchMock);
+    const { store, requestedUrls } = mockSharedStore();
 
     const start = Date.UTC(2026, 0, 1);
     for (let index = 0; index < 3; index += 1) {
@@ -63,23 +99,63 @@ describe("anonymous analysis limits", () => {
     expect(await checkSharedAnonymousAnalysisLimit("0123456789abcdef".repeat(4), start)).toMatchObject({
       allowed: false,
       reason: "daily_limit",
+      limit: 3,
     });
-    expect(storedCount).toBe(3);
+
+    const keys = [...store.keys()];
+    expect(keys.some((key) => key.endsWith("-v-0123456789abcdef0123456789abcdef"))).toBe(true);
+    expect(keys.some((key) => key.endsWith("-g"))).toBe(true);
+    expect(keys.every((key) => !key.includes(":"))).toBe(true);
     expect(requestedUrls.every((url) => !url.includes("%3A"))).toBe(true);
   });
 
-  it("identifies anonymous visitors with a salted IP and User-Agent digest", () => {
+  it("enforces the shared global cap across different visitors", async () => {
+    vi.stubEnv("KEYVALUE_APP_KEY", "test-app-key");
+    vi.stubEnv("LAUNCHLENS_DAILY_ANALYSES_GLOBAL", "2");
+    mockSharedStore();
+
+    const start = Date.UTC(2026, 0, 1);
+    expect(await checkSharedAnonymousUsageLimit("analysis", "a".repeat(64), start)).toEqual({ allowed: true });
+    expect(await checkSharedAnonymousUsageLimit("analysis", "a".repeat(64), start + 1000)).toEqual({ allowed: true });
+    expect(await checkSharedAnonymousUsageLimit("analysis", "b".repeat(64), start + 2000)).toMatchObject({
+      allowed: false,
+      reason: "global_limit",
+      limit: 2,
+    });
+  });
+
+  it("identifies anonymous visitors by IP, not by a caller-controlled User-Agent", () => {
     const first = new Request("https://example.test/api/analyze", {
-      headers: { "x-vercel-forwarded-for": "203.0.113.10", "user-agent": "Browser A" },
+      headers: { "x-real-ip": "203.0.113.10", "user-agent": "Browser A" },
     });
     const sameVisitor = new Request("https://example.test/api/analyze", {
-      headers: { "x-vercel-forwarded-for": "203.0.113.10", "user-agent": "Browser A" },
+      headers: { "x-real-ip": "203.0.113.10", "user-agent": "Browser A" },
     });
-    const otherBrowser = new Request("https://example.test/api/analyze", {
-      headers: { "x-vercel-forwarded-for": "203.0.113.10", "user-agent": "Browser B" },
+    const sameIpNewBrowser = new Request("https://example.test/api/analyze", {
+      headers: { "x-real-ip": "203.0.113.10", "user-agent": "Browser B" },
+    });
+    const otherVisitor = new Request("https://example.test/api/analyze", {
+      headers: { "x-real-ip": "203.0.113.11", "user-agent": "Browser A" },
     });
 
     expect(getAnonymousIdentifier(first)).toBe(getAnonymousIdentifier(sameVisitor));
-    expect(getAnonymousIdentifier(first)).not.toBe(getAnonymousIdentifier(otherBrowser));
+    expect(getAnonymousIdentifier(first)).toBe(getAnonymousIdentifier(sameIpNewBrowser));
+    expect(getAnonymousIdentifier(first)).not.toBe(getAnonymousIdentifier(otherVisitor));
+  });
+
+  it("uses Vercel's trusted client IP header on Vercel", () => {
+    vi.stubEnv("VERCEL", "1");
+    const first = new Request("https://example.test/api/analyze", {
+      headers: { "x-vercel-forwarded-for": "203.0.113.10, 70.0.0.1", "x-forwarded-for": "203.0.113.10" },
+    });
+    const same = new Request("https://example.test/api/analyze", {
+      headers: { "x-vercel-forwarded-for": "203.0.113.10" },
+    });
+    const other = new Request("https://example.test/api/analyze", {
+      headers: { "x-vercel-forwarded-for": "203.0.113.11" },
+    });
+
+    expect(getAnonymousIdentifier(first)).toBe(getAnonymousIdentifier(same));
+    expect(getAnonymousIdentifier(first)).not.toBe(getAnonymousIdentifier(other));
   });
 });

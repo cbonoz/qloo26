@@ -180,10 +180,10 @@ export function createFallbackConceptIdeas(report: AnalysisReport): ConceptIdea[
 
   if (adjacent) {
     ideas.push({
-      name: `A collaboration with ${adjacent}`,
+      name: "A small test in an adjacent cultural audience",
       score: null,
-      rationale: `${adjacent} appears alongside ${report.brand.name} in the related-brand results for these references in ${marketLabel}, so it is an adjacent brand worth exploring.`,
-      firstTest: `Approach ${adjacent} with one concrete collaboration and a small, measurable pilot in ${marketLabel}.`,
+      rationale: `${adjacent} appears alongside ${report.brand.name} in the related-brand results for these references in ${marketLabel}, so its audience is an adjacent cultural space to test—not a partnership assumption.`,
+      firstTest: `Run one small placement or event aimed at that audience, and measure response before scaling spend.`,
     });
   }
 
