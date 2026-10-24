@@ -25,9 +25,8 @@
 *.pem
 prompt.md
 
-# temp (keep ignored for now)
+# temp
 *.tmp
-README.md
 
 # debug
 npm-debug.log*
