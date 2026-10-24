@@ -523,6 +523,8 @@ input:focus, textarea:focus { border-color: #9eb79f; background: #fff; box-shado
 .methodology p strong { font-size: 10px; font-weight: 650; color: #5d705f; }
 .methodology a { color: #879887; padding: 2px; }
 .method-ai { color: #6b8e6b; }
+.report-disclaimer { margin: 1px 3px 0; color: #98a197; font-size: var(--type-caption); line-height: 1.65; }
+.report-disclaimer strong { color: #7d8a7e; font-weight: 650; }
 .site-footer { border-top: 1px solid #e8ece6; margin-top: 22px; padding: 18px 1px 5px; display: flex; align-items: center; justify-content: space-between; gap: 20px; color: #879187; }
 .site-footer-branding { display: grid; gap: 4px; flex-shrink: 0; }
 .site-footer-wordmark { color: #374a3a; font-size: 13px; font-weight: 650; letter-spacing: -.4px; text-decoration: none; }

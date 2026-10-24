@@ -75,6 +75,8 @@ export function MarketReport({ report }: { report: AnalysisReport }) {
       </article>
 
       <div className="methodology"><span className="methodology-mark"><Icon name="sparkle" size={14} /></span><p><strong>How to read this brief</strong><br />Qloo signals describe cultural associations—not demand, causation, demographics, or performance.{report.aiAssisted && <><br /><span className="method-ai">AI interpretation uses the displayed Qloo evidence.</span></>}</p><a href="https://docs.qloo.com/reference/qloo-llm-hackathon-developer-guide" target="_blank" rel="noreferrer" aria-label="Qloo API methodology"><Icon name="external" size={14} /></a></div>
+
+      <p className="report-disclaimer" role="note"><strong>For informational purposes only.</strong> LaunchLens does not provide professional market research, financial, legal, or investment advice. Its outputs are hypotheses, not predictions or guarantees—validate findings before making business decisions.</p>
     </section>
   );
 }

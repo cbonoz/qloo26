@@ -158,6 +158,10 @@ Deploy to Vercel and configure `QLOO_API_KEY`; optionally set `XAI_API_KEY`, `XA
 - Suggested references are model picks filtered only for resolvability, not Qloo findings. A vague goal produces generic references.
 - This MVP has no user accounts or saved reports. Manual drafts persist only in the current tab via session storage.
 
+## Disclaimer
+
+LaunchLens is provided for informational and educational purposes only. It is not professional market research, financial, legal, or investment advice, and its outputs are hypotheses—not predictions or guarantees of performance. Validate findings independently before making business decisions.
+
 ## Screenshots
 
 Captured from the running app with `bun run screenshots`, which drives headless Chrome through the real flow.
