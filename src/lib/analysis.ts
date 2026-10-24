@@ -18,6 +18,40 @@ export function calculateAlignmentScore(evidence: SignalEvidence[]) {
   };
 }
 
+/** The brand's best (lowest-numbered) observed position across the selected references. */
+export function getBestRank(evidence: SignalEvidence[]): number | null {
+  return evidence.reduce<number | null>((best, item) => {
+    if (item.targetRank === null) return best;
+    const rank = item.targetRank + 1;
+    return best === null ? rank : Math.min(best, rank);
+  }, null);
+}
+
+/**
+ * Plain-language interpretation of the composite score. The score is an
+ * average across every selected reference, so it reflects both coverage and
+ * rank; it is deliberately not presented as a grade of the brand.
+ */
+export function describeAlignmentScore(
+  report: Pick<AnalysisReport, "brand" | "directHits" | "signalCount" | "evidence">,
+): string {
+  const count = report.signalCount;
+  const references = `${count} reference${count === 1 ? "" : "s"}`;
+  const bestRank = getBestRank(report.evidence);
+
+  if (report.directHits === 0) {
+    return `${report.brand.name} did not appear in the related-brand results for any of ${references}, so the score is 0. That is a gap to investigate—not proof of rejection. It measures overlap with these references, not demand or brand quality.`;
+  }
+
+  const coverage = report.directHits === count ? `all ${references}` : `${report.directHits} of ${references}`;
+  const best = bestRank === null ? "" : ` Its best position was #${bestRank}.`;
+  const explanation = report.directHits === count
+    ? `The score averages position across ${references}; higher positions raise it.`
+    : `The score averages position across ${references}, so gaps and low ranks pull it down.`;
+
+  return `${report.brand.name} appeared for ${coverage}.${best} ${explanation} It measures overlap with these references, not demand or brand quality.`;
+}
+
 export function createDemoReport(): AnalysisReport {
   const brand = { name: "Aesop", entityId: "demo-brand-aesop" };
   const demoSignals = [

@@ -341,7 +341,7 @@ input:focus, textarea:focus { border-color: #9eb79f; background: #fff; box-shado
 .challenge-box .challenge-unavailable { color: #987b4b; }
 .analysis-paused { color: #946d45; background: #fbf6ec; border: 1px solid #eee5d4; border-radius: 6px; padding: 9px 10px; font-size: 11px; line-height: 1.5; margin-top: 13px; }
 .setup-guide-card { min-height: 100%; padding: 21px 21px 17px; border: 1px solid #e5ebe2; border-radius: 9px; background: radial-gradient(ellipse at 92% 0%, #edf4e9 0, transparent 39%), #fff; box-shadow: 0 2px 7px #17251a05; }
-.setup-guide-art { display: flex; align-items: center; justify-content: space-between; margin: 0 0 20px; padding: 12px 14px; border: 1px solid #edf1eb; border-radius: 7px; background: linear-gradient(110deg, #f7faf5, #fff); }
+.setup-guide-art { display: flex; align-items: center; justify-content: flex-start; gap: 10px; margin: 0 0 19px; padding: 12px 14px; border: 1px solid #edf1eb; border-radius: 7px; background: linear-gradient(110deg, #f7faf5, #fff); }
 .guide-orbit { position: relative; display: grid; place-items: center; width: 54px; height: 42px; border: 1px solid #dfe8dc; border-radius: 50%; transform: rotate(-12deg); }
 .guide-orbit::before { position: absolute; content: ""; width: 35px; height: 29px; border: 1px solid #e4ebe1; border-radius: 50%; transform: rotate(55deg); }
 .guide-orbit b { z-index: 1; display: grid; place-items: center; width: 20px; height: 20px; border-radius: 6px; color: #638569; background: #edf4ec; font-family: Georgia, serif; font-size: 11px; transform: rotate(12deg); }
@@ -349,7 +349,7 @@ input:focus, textarea:focus { border-color: #9eb79f; background: #fff; box-shado
 .guide-orbit i:nth-child(1) { top: 0; left: 5px; }
 .guide-orbit i:nth-child(2) { right: 0; top: 15px; }
 .guide-orbit i:nth-child(3) { bottom: 1px; left: 14px; }
-.guide-art-caption { color: #8c9a8c; font-size: 7px; letter-spacing: 1px; font-weight: 700; }
+.guide-art-caption { display: block; flex-shrink: 0; color: #668269; font-size: 7px; letter-spacing: 1px; font-weight: 700; white-space: nowrap; }
 .setup-guide-card > .small-kicker { margin-bottom: 8px; }
 .setup-guide-card h2 { margin: 0; color: #364b39; font-size: 18px; line-height: 1.3; letter-spacing: -.45px; }
 .setup-guide-card > p { margin: 9px 0 17px; color: #838e83; font-size: 12px; line-height: 1.6; }
@@ -399,6 +399,8 @@ input:focus, textarea:focus { border-color: #9eb79f; background: #fff; box-shado
 .score-caption { color: #7c8b7d; font-size: 9px; letter-spacing: 1px; font-weight: 700; margin-bottom: 7px; }
 .score-copy h2 { color: #334b38; font-size: 20px; letter-spacing: -.4px; margin: 0 0 7px; }
 .score-copy p { font-size: 12px; line-height: 1.65; color: #748075; margin: 0; max-width: 680px; }
+.app-shell .score-copy p.score-meaning { margin-top: 10px; padding-top: 9px; border-top: 1px solid #eef2ec; color: #7d8a7e; font-size: 12px; line-height: 1.6; }
+.app-shell .score-copy p.score-meaning strong { color: #526b55; font-weight: 650; }
 .score-footer { min-height: 58px; margin: 0 -20px; border-top: 1px solid #e9eee7; padding: 0 18px; display: flex; align-items: center; gap: 14px; position: relative; }
 .score-stat { display: flex; align-items: center; gap: 7px; }
 .stat-icon { display: grid; place-items: center; width: 23px; height: 23px; border-radius: 7px; }
@@ -703,6 +705,7 @@ input:focus, textarea:focus { border-color: #9eb79f; background: #fff; box-shado
   .example-cue-row strong, .example-cue-rank, .example-report-footer, .example-report-footer button,
   .section-number, .optional-step-note .optional-label, .optional-label, .compare-details summary small,
   .challenge-box span, .guide-art-caption, .report-period, .data-badge, .sample-date,
+  .guide-outcomes small, .guide-footnote,
   .score-caption, .score-ring-inner span, .score-stat span:last-child, .score-overlap > div span,
   .score-overlap > div strong, .score-method, .method-popover, .evidence-count, .signal-meta span,
   .rank-chip, .evidence-footnote, .evidence-footnote > span:first-child, .risk-marker,
@@ -719,7 +722,8 @@ input:focus, textarea:focus { border-color: #9eb79f; background: #fff; box-shado
   .error-banner p, .error-banner small, .fill-demo-button, input, textarea, .field-hint,
   .reference-explainer p, .field-count, .cue-examples span, .cue-examples button, .cue-example-note, .compare-details summary strong,
   .secure-note, .challenge-box strong, .analysis-paused,
-  .guide-outcomes small, .guide-footnote, .empty-steps, .empty-steps b, .empty-footnote,
+  .setup-guide-card > p, .guide-outcomes strong,
+  .empty-steps, .empty-steps b, .empty-footnote,
   .demo-disclaimer p, .signal-meta strong, .signal-rank-label,
   .suggest-button, .suggest-hint, .reference-copy strong, .reference-copy span, .reference-add button,
   .decision-intro, .decision-why, .decision-margin, .decision-caveat, .idea-title strong, .idea-score,
@@ -730,7 +734,7 @@ input:focus, textarea:focus { border-color: #9eb79f; background: #fff; box-shado
 .app-shell :is(
   .nav-link, .hero-copy, .notice-strip, .landing-copy > p,
   .landing-section-heading > p, .landing-feature-card h3, .card-heading p, .field-label,
-  .optional-step-note p, .back-button, .setup-guide-card > p, .guide-outcomes strong,
+  .optional-step-note p, .back-button,
   .report-empty-state > p, .score-copy p, .score-stat strong, .insight-card li,
   .recommendation-item p, .methodology p
  ) { font-size: var(--type-body); }

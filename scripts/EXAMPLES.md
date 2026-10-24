@@ -25,6 +25,10 @@ Only **Scenario 1** has a bundled snapshot and works without API credentials. Sc
 - **Goal:** Launch a small-space furniture line for people living in compact homes in Seoul.
 - **Cultural references:** MUJI, Parasite, Blue Bottle Coffee
 
+### How the references are used
+
+These are starting points for Qloo’s related-brand check, not assumptions about what people in Seoul like and not a list to validate with an audience. They stand in for the cultural territory each campaign idea would enter. For each reference, Qloo returns a set of related brands in Seoul. LaunchLens records whether IKEA appears in that list and at what rank. A missing IKEA is recorded as a gap. The lists can include competitors or adjacent brands, but the check is about cultural overlap—not counting competitors.
+
 ### The two options
 
 - **Option A:** Small-Space Design Workshop
@@ -34,7 +38,7 @@ Only **Scenario 1** has a bundled snapshot and works without API credentials. Sc
 
 The bundled snapshot was captured on **October 21, 2026**:
 
-- Cultural signal score: **10/100** — limited observed overlap.
+- Cultural signal score: **10/100** — limited observed overlap. This is an average across all three references, not a market grade.
 - IKEA appears for **1 of 3** references.
 - MUJI is the only direct match: IKEA ranks **#15 of 20**.
 - Parasite and Blue Bottle Coffee return **no direct IKEA match**.
@@ -42,7 +46,7 @@ The bundled snapshot was captured on **October 21, 2026**:
 
 ### What to look for
 
-The app is not saying IKEA is unpopular in Seoul. It is saying the evidence for these three references is thin, and the workshop is the stronger first test because it builds on the only direct overlap. The gaps are just as useful: they identify what the team should validate with local customers.
+The app is not saying IKEA is unpopular in Seoul. It is saying the evidence for these three references is thin: IKEA appears in one list and not the other two, and the one appearance is mid-list. The low score combines those gaps and that rank. The workshop is the stronger first test because it builds on the only direct overlap. The gaps are just as useful: they identify what the team should validate with local customers.
 
 ### Why it is a good demo
 

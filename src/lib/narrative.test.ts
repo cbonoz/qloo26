@@ -51,6 +51,10 @@ describe("xAI narrative provider", () => {
         strict: true,
       },
     });
+    const input = body.input as Array<{ content: string }>;
+    expect(JSON.parse(input[1].content)).toMatchObject({
+      qlooScoreDetails: { directMatches: 3, totalReferences: 3, bestRank: 2 },
+    });
     expect(result.aiAssisted).toBe(true);
     expect(result.summary).toBe(generated.summary);
   });

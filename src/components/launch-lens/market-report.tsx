@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 import { Icon } from "@/components/launch-lens/icon";
+import { describeAlignmentScore, getBestRank } from "@/lib/analysis";
 import type { AnalysisReport, ConceptIdea } from "@/lib/types";
 
 export function MarketReport({ report }: { report: AnalysisReport }) {
@@ -17,6 +18,8 @@ export function MarketReport({ report }: { report: AnalysisReport }) {
       ? "Limited observed overlap"
       : "No direct overlap found";
   const overlapPercent = report.signalCount ? Math.round((report.directHits / report.signalCount) * 100) : 0;
+  const bestRank = getBestRank(report.evidence);
+  const scoreExplanation = describeAlignmentScore(report);
   const decisionLabel = isCached ? "SNAPSHOT EXAMPLE" : report.aiAssisted ? "AI-ASSISTED" : "EVIDENCE-LED";
 
   return (
@@ -25,13 +28,13 @@ export function MarketReport({ report }: { report: AnalysisReport }) {
       <article className={`score-card ${isLive ? "live-report" : "demo-report"}`}>
         <div className="score-card-top"><span className={`data-badge ${isLive || isCached ? "live-badge" : "demo-badge"}`}><i />{dataLabel}</span><span className="sample-date">{isCached && capturedDate ? `Captured ${capturedDate}` : `Market · ${report.marketResolved || report.market}`}</span></div>
         <div className="score-content">
-          <div className="score-ring" role="img" aria-label={`Cultural signal score: ${report.score} out of 100`} style={{ "--score": `${report.score * 3.6}deg` } as CSSProperties}>
+          <div className="score-ring" role="img" aria-label={`Cultural signal score: ${report.score} out of 100. ${report.directHits} of ${report.signalCount} references matched${bestRank ? `; best position #${bestRank}` : ""}. This measures reference overlap, not market demand.`} style={{ "--score": `${report.score * 3.6}deg` } as CSSProperties}>
             <div className="score-ring-inner"><strong>{report.score}</strong><span>/ 100</span></div>
           </div>
-          <div className="score-copy"><div className="score-caption">CULTURAL SIGNAL SCORE · NOT MARKET DEMAND</div><h2>{scoreLabel}</h2><p>{report.summary}</p></div>
+          <div className="score-copy"><div className="score-caption">CULTURAL SIGNAL SCORE · NOT MARKET DEMAND</div><h2>{scoreLabel}</h2><p>{report.summary}</p><p className="score-meaning"><strong>What this means:</strong> {scoreExplanation}</p></div>
         </div>
         {report.goal && <div className="brief-goal"><span>Your goal</span><p>{report.goal}</p></div>}
-        <div className="score-footer"><div className="score-stat"><span className="stat-icon green"><Icon name="check" size={14} /></span><div><strong>{report.directHits} of {report.signalCount}</strong><span>direct brand matches</span></div></div><div className="score-footer-divider" /><div className="score-stat"><span className="stat-icon lavender"><Icon name="users" size={14} /></span><div><strong>{report.audienceSignals.length}</strong><span>references resolved</span></div></div><div className="score-overlap"><div><span>Signals with a match</span><strong>{overlapPercent}%</strong></div><span className="overlap-track"><i style={{ width: `${overlapPercent}%` }} /></span></div><div className="score-method">How it’s scored <span>ⓘ</span><div className="method-popover">Mean rank-based overlap across your cultural references in this market. No match doesn’t prove mismatch.</div></div></div>
+        <div className="score-footer"><div className="score-stat"><span className="stat-icon green"><Icon name="check" size={14} /></span><div><strong>{report.directHits} of {report.signalCount}</strong><span>references with a match</span></div></div><div className="score-footer-divider" /><div className="score-stat"><span className="stat-icon lavender"><Icon name="target" size={14} /></span><div><strong>{bestRank ? `#${bestRank}` : "—"}</strong><span>best position</span></div></div><div className="score-overlap"><div><span>References matched</span><strong>{overlapPercent}%</strong></div><span className="overlap-track"><i style={{ width: `${overlapPercent}%` }} /></span></div><div className="score-method">How this is calculated <span>ⓘ</span><div className="method-popover">The score averages where your brand appears across all selected references. A missing match counts as zero. More matches and higher positions raise the score. It is not a demand forecast.</div></div></div>
       </article>
 
       {isCached && <div className="demo-disclaimer"><span>ⓘ</span><p><strong>Snapshot from {capturedDate || "a prior Qloo lookup"}.</strong> Not a live check or evidence of demand.</p></div>}

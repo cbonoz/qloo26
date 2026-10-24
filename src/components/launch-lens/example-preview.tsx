@@ -21,7 +21,7 @@ export function ExamplePreview({ onStart }: { onStart: () => void }) {
       <article className="example-report-card">
         <div className="example-report-header">
           <div><span className="data-badge demo-badge"><i />QLOO SNAPSHOT</span><h3>{report.brand.name}<span> × </span>{report.marketResolved || report.market}</h3></div>
-          <div className="example-score"><strong>{report.score}</strong><span>/ 100<br />snapshot score</span></div>
+          <div className="example-score"><strong>{report.score}</strong><span>/ 100<br />reference overlap</span></div>
         </div>
         {report.goal && <p className="example-use-case"><span>THE GOAL</span> {report.goal}</p>}
         <p className="example-use-case"><span>THE DECISION</span> IKEA in Seoul: small-space workshop or repair-and-swap event?</p>

@@ -1,5 +1,5 @@
 import type { AnalysisReport, CampaignAssessment, ConceptIdea } from "./types";
-import { createFallbackNarrative, createFallbackConceptIdeas } from "./analysis";
+import { createFallbackNarrative, createFallbackConceptIdeas, getBestRank } from "./analysis";
 import { requestXaiJson } from "./xai";
 
 type Narrative = ReturnType<typeof createFallbackNarrative> & {
@@ -61,6 +61,7 @@ const narrativeSystemPrompt = [
   "If no campaign options are supplied: return an empty comparison list and exactly three conceptIdeas, ranked best first. Each conceptIdea is a concrete, testable campaign idea for this brand in this market, with a name, a score estimate, a rationale that cites the supplied evidence, and a firstTest describing the smallest test that would validate it.",
   "If the team supplied a goal, keep every idea in service of that goal.",
   "Scores for campaign options and ideas are heuristic judgments based on the supplied evidence, not Qloo scores or market predictions.",
+  "The cultural signal score is an average of the brand's position across all selected references, with a missing match counting as zero. If you mention it, state how many references matched and the best rank; never describe it as a grade of brand quality, cultural fit, demand, or campaign performance.",
 ].join(" ");
 
 function truncate(value: string, maxLength: number) {
@@ -132,6 +133,11 @@ export async function createNarrative(
       qlooResolvedMarket: report.marketResolved,
       goal: report.goal ?? null,
       qlooScore: report.score,
+      qlooScoreDetails: {
+        directMatches: report.directHits,
+        totalReferences: report.signalCount,
+        bestRank: getBestRank(report.evidence),
+      },
       qlooEvidence: report.evidence.map((item) => ({
         referenceName: item.name,
         targetBrandRank: item.targetRank === null ? null : item.targetRank + 1,

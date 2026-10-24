@@ -84,7 +84,7 @@ Keep [EXAMPLES.md](EXAMPLES.md) open if you want to switch to a live scenario.
 
 **Say:**
 
-> “LaunchLens starts with a brand, a market, and the goal. It suggests the cultural references to test, then uses Qloo’s location-aware signals to compare two options — or to propose ranked first tests if the team has none.”
+> “LaunchLens starts with a brand, a market, and the goal. It suggests cultural references to check, then uses Qloo’s location-aware signals to compare two options — or to propose ranked first tests if the team has none.”
 >
 > “Most AI tools can brainstorm ideas. Qloo is what lets LaunchLens check whether those ideas have a cultural bridge in this specific market.”
 
@@ -106,7 +106,7 @@ Point to the example card:
 
 **Say:**
 
-> “The goal is compact living. The references are MUJI, Parasite, and Blue Bottle Coffee — specific names to test, not assumptions about everyone in Seoul. The callout under the field explains why this matters: Qloo checks whether IKEA appears alongside each name in Seoul, and those matches and gaps become the evidence. The two options are a small-space design workshop and a repair-and-swap event.”
+> “The goal is compact living. For cultural references, we’re using MUJI, Parasite, and Blue Bottle Coffee—not as claims about what everyone in Seoul likes, but as three starting points for Qloo’s check. Qloo returns related brands for each name in Seoul, and we look for IKEA in those results. Those matches and gaps become the evidence behind the recommendation. The two options are a small-space design workshop and a repair-and-swap event.”
 
 **Tip:** Do not edit a field while walking back. Navigating with Back/Continue preserves the cached demo. Any edit invalidates the snapshot and switches the final button to **Run market check**.
 
@@ -123,8 +123,8 @@ Point to the example card:
 Point to each item in order:
 
 1. **QLOO SNAPSHOT** and the captured date.
-2. **10/100 cultural signal score** — explicitly “not market demand.”
-3. **1 of 3 direct brand matches**.
+2. **10/100 cultural signal score** — an overlap index, not market demand: IKEA appears in one of three reference lists, at #15.
+3. **1 of 3 references matched** — IKEA appeared in one related-brand list.
 4. **MUJI:** IKEA ranks **#15 of 20**.
 5. **Parasite and Blue Bottle Coffee:** no direct IKEA match.
 6. **Recommendation:** Small-Space Design Workshop first.
@@ -206,7 +206,7 @@ Budget at most one alternate live run during a demo. The cached IKEA path is the
 No. Qloo supplies the observed brand ranks; the AI interprets them. The UI keeps the two distinct with labels like **LIVE QLOO DATA** and **AI-ASSISTED**.
 
 **“Why is the score only 10/100?”**
-IKEA appears at rank 15 of 20 for MUJI, and the other two references have no direct match. The score is the mean rank-based overlap across all three references — not a market-size score.
+The score averages across all three references. IKEA is #15 of 20 for MUJI, while Parasite and Blue Bottle Coffee return no IKEA. Those gaps count as zero, so 10/100 means “thin overlap across this reference set,” not “IKEA is weak in Seoul.” Point to the per-reference rows: the low number is a combination of one mid-list match and two gaps.
 
 **“Does a low score mean don’t launch?”**
 No. It means no direct overlap was found in this small reference set. That is a gap to investigate, not a verdict.

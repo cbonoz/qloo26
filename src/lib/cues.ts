@@ -34,9 +34,9 @@ const referenceSchema = {
 } as const;
 
 const suggestionSystemPrompt = [
-  "You help brand and strategy teams choose which cultural references to test in a new market.",
+  "You help brand and strategy teams choose which cultural references to check in a new market.",
   "You are given a brand, a target market, and what the team wants to do there.",
-  "Propose 2 to 4 cultural references to test. Every reference must be a specific, well-known proper noun that a cultural data provider can resolve as an entity: an artist, musician, film, TV series, brand, or place.",
+  "Propose 2 to 4 cultural references to check. Every reference must be a specific, well-known proper noun that a cultural data provider can resolve as an entity: an artist, musician, film, TV series, brand, or place.",
   "Rules: never propose a generic category, demographic, or trait (no 'young people', 'premium', 'sustainable lifestyle'); never propose the brand itself; prefer references with real cultural relevance in the target market; keep each name short, unambiguous, and spelled the way a fan would write it.",
   "For each reference, write one short sentence explaining why it is a useful reference for this team's goal in this market.",
 ].join(" ");

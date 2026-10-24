@@ -49,7 +49,7 @@ export function LandingPage({ onStart }: { onStart: () => void }) {
         </div>
         <div className="landing-feature-grid">
           <article className="landing-feature-card"><span className="landing-feature-number">01</span><span className="landing-feature-icon"><Icon name="report" size={17} /></span><h3>Ground your brief</h3><p>Name a brand, a market, and what you want to do there.</p></article>
-          <article className="landing-feature-card"><span className="landing-feature-number">02</span><span className="landing-feature-icon"><Icon name="users" size={17} /></span><h3>See the connections</h3><p>We suggest the cultural references to test, then explore Qloo’s location-aware signals.</p></article>
+          <article className="landing-feature-card"><span className="landing-feature-number">02</span><span className="landing-feature-icon"><Icon name="users" size={17} /></span><h3>See the connections</h3><p>We suggest cultural references to check, then explore Qloo’s location-aware signals.</p></article>
           <article className="landing-feature-card"><span className="landing-feature-number">03</span><span className="landing-feature-icon"><Icon name="sparkle" size={17} /></span><h3>Pick what to test first</h3><p>Have two ideas? Get a side-by-side recommendation. Starting blank? Get ranked first tests with a first experiment for each.</p></article>
         </div>
         <p className="landing-how-note">Want to see the evidence behind the recommendation? <Link href="/about">Read the methodology and an example Qloo response <span>↗</span></Link></p>

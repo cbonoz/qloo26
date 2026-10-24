@@ -37,7 +37,7 @@ const stepGuidance: Record<WizardStep, { title: string; description: string }> =
   },
   audience: {
     title: "Say what you want to do in this market.",
-    description: "We pick the cultural references to test, and you can edit them before running the check.",
+    description: "We suggest cultural references to check, and you can edit them before running the analysis.",
   },
   concepts: {
     title: "Compare two campaign ideas—or let us suggest them.",

@@ -35,7 +35,7 @@ type MarketCheckFormProps = {
 
 const stepDetails: Record<SetupStep, { number: string; title: string; description: string }> = {
   market: { number: "01", title: "Brand & market", description: "Choose a brand and where you plan to launch." },
-  audience: { number: "02", title: "Goal & cultural references", description: "Say what you want to do there. We'll pick the references to test." },
+  audience: { number: "02", title: "Goal & cultural references", description: "Say what you want to do there. We'll suggest references to check." },
   concepts: { number: "03", title: "Campaign comparison", description: "Compare two ideas of your own—or get ranked suggestions." },
   preview: { number: "04", title: "Review your brief", description: "Check your inputs before running the market check." },
 };
@@ -136,8 +136,8 @@ export function MarketCheckForm({
           <div className="signal-label-row"><label htmlFor="reference-input">Cultural references <span className="required">*</span></label><span className="field-count">{referenceCount} / 4</span></div>
           <div className="reference-explainer">
             <span className="reference-explainer-label">WHY THIS MATTERS</span>
-            <p>Qloo checks whether <strong>{brand.trim() || "your brand"}</strong> appears alongside each name in <strong>{market.trim() || "your market"}</strong>. The matches—and gaps—become the evidence behind your recommendation, whether you bring two ideas or need new ones. Different references can change the result, so pick names you’re genuinely curious about.</p>
-            <p><strong>Add 2–4 specific names:</strong> artists, films, TV shows, brands, or places your audience may know—not traits like “young” or “premium”.</p>
+            <p>These names stand in for the cultural world your idea would enter. LaunchLens checks whether <strong>{brand.trim() || "your brand"}</strong> already has a connection to each one in <strong>{market.trim() || "your market"}</strong>. A match—especially near #1—means there’s a bridge the idea can build on. No match means the campaign would have to create that connection, so treat it as a gap to test.</p>
+            <p>That helps you choose which idea to test first. It isn’t a competitor count, audience survey, or demand forecast—just evidence for where the brand already has cultural footing.</p>
           </div>
 
           {references.length > 0 && <ul className="reference-list">{references.map((reference) => (
