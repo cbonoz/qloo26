@@ -134,7 +134,11 @@ export function MarketCheckForm({
           </div>
 
           <div className="signal-label-row"><label htmlFor="reference-input">Cultural references <span className="required">*</span></label><span className="field-count">{referenceCount} / 4</span></div>
-          <p className="field-hint">Artists, films, TV shows, brands, or places your audience in {market.trim() || "your market"} may already know — not traits like “young” or “premium”. Two to four works best.</p>
+          <div className="reference-explainer">
+            <span className="reference-explainer-label">WHY THIS MATTERS</span>
+            <p>Qloo checks whether <strong>{brand.trim() || "your brand"}</strong> appears alongside each name in <strong>{market.trim() || "your market"}</strong>. The matches—and gaps—become the evidence behind your recommendation, whether you bring two ideas or need new ones. Different references can change the result, so pick names you’re genuinely curious about.</p>
+            <p><strong>Add 2–4 specific names:</strong> artists, films, TV shows, brands, or places your audience may know—not traits like “young” or “premium”.</p>
+          </div>
 
           {references.length > 0 && <ul className="reference-list">{references.map((reference) => (
             <li className="reference-item" key={reference.name}>
@@ -187,7 +191,7 @@ export function MarketCheckForm({
           {step !== "market" && <button className="back-button" type="button" onClick={onBack} disabled={loading}>Back</button>}
           <button className="analyze-button" type="submit" disabled={loading || (isFinalStep && analysisEnabled === false && !isCachedExample)}>
             {loading ? <span className="button-spinner" /> : <Icon name={isFinalStep ? "sparkle" : "arrow"} size={17} />}
-            {loading ? "Reading market signals…" : isCachedExample ? "View example report" : isFinalStep ? "Run market check" : "Continue"}
+            {loading ? "Reading market signals…" : isFinalStep && isCachedExample ? "View example report" : isFinalStep ? "Run market check" : "Continue"}
             {!loading && <span className="button-arrow">↗</span>}
           </button>
         </div>

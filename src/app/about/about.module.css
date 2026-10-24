@@ -69,9 +69,143 @@
   text-underline-offset: 2px;
 }
 
+.evidenceGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.06fr) minmax(0, 0.94fr);
+  gap: 12px;
+  align-items: stretch;
+}
+
+.codeCard {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid #243c2e;
+  border-radius: 9px;
+  background: #1b2c22;
+  box-shadow: 0 4px 14px #1b2c2214;
+}
+
+.codeHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 13px;
+  border-bottom: 1px solid #ffffff12;
+  color: #a9c2a4;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+}
+
+.codeHeader span:last-child {
+  color: #7f9a80;
+}
+
+.codeRequest {
+  padding: 8px 13px;
+  border-bottom: 1px solid #ffffff0f;
+  color: #b8d0ac;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 10px;
+}
+
+.codeBlock {
+  flex: 1;
+  min-width: 0;
+  max-width: 100%;
+  margin: 0;
+  padding: 12px 13px;
+  overflow-x: auto;
+  color: #dbe8d6;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 11px;
+  line-height: 1.65;
+  tab-size: 2;
+}
+
+.codeBlock code {
+  color: inherit;
+  font-family: inherit;
+}
+
+.codeNote {
+  margin: 0;
+  padding: 10px 13px 12px;
+  border-top: 1px solid #ffffff10;
+  color: #9ab09a;
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.codeNote strong {
+  color: #cfe2c8;
+  font-weight: 650;
+}
+
+.evidenceBreakdown {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 8px;
+}
+
+.valueCard {
+  display: flex;
+  gap: 11px;
+  padding: 13px 14px;
+  border: 1px solid #e7ebe4;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.valueCard > span {
+  flex-shrink: 0;
+  color: #84a183;
+  font-family: Georgia, serif;
+  font-size: 14px;
+  line-height: 1.2;
+}
+
+.valueCard h3 {
+  margin: 0 0 4px;
+  color: #455649;
+  font-size: 14px;
+  letter-spacing: -0.1px;
+}
+
+.valueCard p {
+  margin: 0;
+  color: #707d72;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.valueCard code {
+  color: #586f59;
+  background: #f0f4ed;
+  border-radius: 3px;
+  padding: 1px 4px;
+  font-size: 11px;
+}
+
+.evidenceNote {
+  margin: 2px 0 0;
+  padding: 0 2px;
+  color: #7d8a7e;
+  font-size: 11px;
+  line-height: 1.55;
+}
+
 @media (max-width: 900px) {
   .competitorGrid {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .evidenceGrid {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -82,5 +216,13 @@
 
   .competitorCard {
     min-height: 0;
+  }
+
+  .codeBlock {
+    font-size: 10px;
+  }
+
+  .valueCard {
+    padding: 12px;
   }
 }

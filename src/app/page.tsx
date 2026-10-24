@@ -272,7 +272,6 @@ export default function Home() {
       if (!response.ok) throw new Error(result.error || "The analysis could not be completed.");
       setReport(result as AnalysisReport);
       moveToStep("results");
-      setStatus((current) => current ? { ...current, qlooConfigured: true } : current);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "The analysis could not be completed.");
     } finally {
@@ -346,13 +345,6 @@ export default function Home() {
       <main className="main-content" id="overview">
         <header className="topbar">
           <div className="breadcrumbs"><span>Workspace</span><span className="crumb-slash">/</span><strong>{isLandingPage ? "Overview" : wizardSteps[activeStepIndex]?.label || "Overview"}</strong></div>
-          <div className="topbar-actions">
-            <div className={`connection ${status?.qlooConfigured ? "connected" : "demo-connection"}`}>
-              <span className="connection-dot" />
-              {status?.qlooConfigured ? "Qloo connected" : status ? "Qloo setup needed" : "Checking Qloo…"}
-            </div>
-            <button className="help-button" aria-label="Help" type="button">?</button>
-          </div>
         </header>
 
         <div className="page-wrap">

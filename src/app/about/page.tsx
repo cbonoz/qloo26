@@ -47,6 +47,44 @@ export default function AboutPage() {
           <div className="method-formula"><div><span className="small-kicker">THE CULTURAL SIGNAL SCORE</span><strong>Mean rank-based overlap</strong></div><p>For each cultural reference, a rank-1 match in a 20-result list contributes 100; a rank-20 match contributes 5; and no direct match contributes 0. A missing match is not evidence that an audience dislikes the brand.</p></div>
         </section>
 
+        <section className="about-section" id="qloo-evidence">
+          <div className="about-section-heading">
+            <span className="small-kicker">THE EVIDENCE LAYER</span>
+            <h2>What Qloo returns—and why it changes the conversation.</h2>
+            <p className="about-section-lede">A trimmed, illustrative snippet from the Qloo Insights call behind the IKEA Seoul example. Entity IDs are shortened, and this is not a live response.</p>
+          </div>
+          <div className={styles.evidenceGrid}>
+            <div className={styles.codeCard}>
+              <div className={styles.codeHeader}><span>QLOO INSIGHTS · ILLUSTRATIVE</span><span>JSON</span></div>
+              <div className={styles.codeRequest}>GET /v2/insights · MUJI × Seoul</div>
+              <pre className={styles.codeBlock}><code>{`{
+  "query": {
+    "localities": {
+      "signal": {
+        "name": "Seoul",
+        "entity_id": "loc_8f2a…"
+      }
+    }
+  },
+  "results": {
+    "entities": [
+      { "name": "Beams", "entity_id": "brand_01…" },
+      { "name": "Niko And...", "entity_id": "brand_02…" },
+      { "name": "Urban Research", "entity_id": "brand_03…" }
+    ]
+  }
+}`}</code></pre>
+              <p className={styles.codeNote}>Trimmed to the first three related brands. IKEA appears at <strong>#15 of 20</strong> for MUJI, outside this snippet. Not a live response.</p>
+            </div>
+            <div className={styles.evidenceBreakdown}>
+              <article className={styles.valueCard}><span>01</span><div><h3>Location-aware</h3><p>The <code>query.localities.signal</code> resolves to Seoul. Every related-brand list is scoped to that market—not a global average.</p></div></article>
+              <article className={styles.valueCard}><span>02</span><div><h3>Cross-category</h3><p><code>signal.interests.entities</code> can be a brand, film, artist, or place. The same response shape works whether the reference is MUJI, Parasite, or Seoul Forest.</p></div></article>
+              <article className={styles.valueCard}><span>03</span><div><h3>Ranked, not binary</h3><p>LaunchLens looks for the target brand in <code>results.entities</code> and records its position. #15 is a weak signal; <code>null</code> is a gap to investigate—not a rejection.</p></div></article>
+              <p className={styles.evidenceNote}>Qloo retrieves the evidence. LaunchLens and the AI provider interpret it; the recommendation is not a Qloo score.</p>
+            </div>
+          </div>
+        </section>
+
         <section className="about-section" id="where-it-fits">
           <div className="about-section-heading">
             <span className="small-kicker">THE LANDSCAPE</span>
