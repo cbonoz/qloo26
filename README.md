@@ -11,6 +11,8 @@ LaunchLens helps brand and strategy teams decide **which marketing activity to t
 
 **Live demo:** [getlaunchlens.vercel.app](https://getlaunchlens.vercel.app)
 
+Demo video: https://youtu.be/vMIgTT__4VM
+
 > **Prototype:** Built for the [Qloo Agentic Hackathon](https://qloo.devpost.com/). It is a cultural-context layer for early exploration, not a replacement for audience research, market sizing, or social listening. See [Where LaunchLens fits](#where-launchlens-fits).
 
 ## What it does
