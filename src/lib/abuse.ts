@@ -4,6 +4,10 @@ const ATTEMPT_WINDOW_MS = 60 * 1000;
 const MAX_ATTEMPTS_PER_MINUTE = 30;
 const MAX_ANALYSES_PER_INSTANCE_DAY = 500;
 const MAX_SUGGESTIONS_PER_INSTANCE_DAY = 500;
+const DEFAULT_ANALYSES_PER_VISITOR = 3;
+const DEFAULT_SUGGESTIONS_PER_VISITOR = 10;
+const DEFAULT_ANALYSES_GLOBAL = 50;
+const DEFAULT_SUGGESTIONS_GLOBAL = 50;
 const DAY_MS = 24 * 60 * 60 * 1000;
 const KEY_VALUE_API = "https://keyvalue.immanuel.co/api/KeyVal";
 const KEY_VALUE_TIMEOUT_MS = 2_500;
@@ -56,12 +60,12 @@ function usageLimits(kind: UsageKind) {
   const analysis = kind === "analysis";
   const global = envLimit(
     analysis ? "LAUNCHLENS_DAILY_ANALYSES_GLOBAL" : "LAUNCHLENS_DAILY_SUGGESTIONS_GLOBAL",
-    500,
+    analysis ? DEFAULT_ANALYSES_GLOBAL : DEFAULT_SUGGESTIONS_GLOBAL,
   );
   return {
     perVisitor: envLimit(
       analysis ? "LAUNCHLENS_DAILY_ANALYSES_PER_VISITOR" : "LAUNCHLENS_DAILY_SUGGESTIONS_PER_VISITOR",
-      analysis ? 3 : 10,
+      analysis ? DEFAULT_ANALYSES_PER_VISITOR : DEFAULT_SUGGESTIONS_PER_VISITOR,
     ),
     // Without a shared store this acts as the per-process ceiling. With a
     // shared store it is also the cross-instance ceiling.
@@ -191,14 +195,12 @@ export async function checkSharedAnonymousUsageLimit(
 
   // Increment the visitor first. If that is already over the per-visitor cap,
   // deny without spending a slot from the shared global budget.
-  await incrementSharedCounter(encodedAppKey, visitorKey);
-  const updatedVisitorCount = await readSharedCounter(encodedAppKey, visitorKey);
+  const updatedVisitorCount = await incrementSharedCounter(encodedAppKey, visitorKey);
   if (updatedVisitorCount > limits.perVisitor) {
     return { allowed: false, reason: "daily_limit", retryAfterSeconds, limit: limits.perVisitor };
   }
 
-  await incrementSharedCounter(encodedAppKey, globalKey);
-  const updatedGlobalCount = await readSharedCounter(encodedAppKey, globalKey);
+  const updatedGlobalCount = await incrementSharedCounter(encodedAppKey, globalKey);
   if (updatedGlobalCount > limits.global) {
     return { allowed: false, reason: "global_limit", retryAfterSeconds, limit: limits.global };
   }
@@ -219,16 +221,35 @@ export function checkSharedAnonymousSuggestionLimit(
   return checkSharedAnonymousUsageLimit("suggestion", identifier, now);
 }
 
-async function incrementSharedCounter(appKey: string, key: string) {
-  const response = await fetch(
+async function incrementSharedCounter(appKey: string, key: string): Promise<number> {
+  const incrementResponse = await fetch(
     `${KEY_VALUE_API}/ActOnValue/${appKey}/${key}/Increment`,
     {
       method: "POST",
+      // The key-value service returns 411 unless the POST declares a length.
+      body: "",
       cache: "no-store",
       signal: AbortSignal.timeout(KEY_VALUE_TIMEOUT_MS),
     },
   );
-  if (!response.ok) throw new Error(`Key-value increment failed (${response.status}).`);
+  if (!incrementResponse.ok) throw new Error(`Key-value increment failed (${incrementResponse.status}).`);
+
+  const updated = await readSharedCounter(appKey, key);
+  if (updated > 0) return updated;
+
+  // ActOnValue reports success for a missing key but does not create it.
+  // Initialize the counter so the next request increments from one.
+  const updateResponse = await fetch(
+    `${KEY_VALUE_API}/UpdateValue/${appKey}/${key}/1`,
+    {
+      method: "POST",
+      body: "",
+      cache: "no-store",
+      signal: AbortSignal.timeout(KEY_VALUE_TIMEOUT_MS),
+    },
+  );
+  if (!updateResponse.ok) throw new Error(`Key-value initialization failed (${updateResponse.status}).`);
+  return 1;
 }
 
 async function readSharedCounter(appKey: string, key: string) {

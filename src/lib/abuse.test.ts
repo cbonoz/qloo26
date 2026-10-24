@@ -16,13 +16,21 @@ function mockSharedStore() {
     const url = new URL(String(input));
     requestedUrls.push(String(input));
     const parts = url.pathname.split("/").filter(Boolean);
-    const isIncrement = parts.at(-1) === "Increment";
-    const key = decodeURIComponent(isIncrement ? parts.at(-2) ?? "" : parts.at(-1) ?? "");
-    if (init?.method === "POST") {
-      store.set(key, (store.get(key) ?? 0) + 1);
-      return new Response("ok", { status: 200 });
+    const action = parts.at(-1) ?? "";
+    if (init?.method === "POST" && action === "Increment") {
+      const key = decodeURIComponent(parts.at(-2) ?? "");
+      // Match the real service: incrementing a missing key is a no-op.
+      if (store.has(key)) store.set(key, (store.get(key) ?? 0) + 1);
+      return new Response("Increment Successful", { status: 200 });
     }
-    return new Response(String(store.get(key) ?? 0), { status: 200 });
+    if (init?.method === "POST" && parts.includes("UpdateValue")) {
+      const key = decodeURIComponent(parts.at(-2) ?? "");
+      const value = Number(parts.at(-1));
+      store.set(key, value);
+      return new Response("true", { status: 200 });
+    }
+    const key = decodeURIComponent(parts.at(-1) ?? "");
+    return new Response(store.has(key) ? String(store.get(key)) : '""', { status: 200 });
   });
   vi.stubGlobal("fetch", fetchMock);
   return { store, requestedUrls, fetchMock };
@@ -107,6 +115,17 @@ describe("anonymous usage limits", () => {
     expect(keys.some((key) => key.endsWith("-g"))).toBe(true);
     expect(keys.every((key) => !key.includes(":"))).toBe(true);
     expect(requestedUrls.every((url) => !url.includes("%3A"))).toBe(true);
+  });
+
+  it("sends a zero-length body to shared-counter POSTs", async () => {
+    vi.stubEnv("KEYVALUE_APP_KEY", "test-app-key");
+    const { fetchMock } = mockSharedStore();
+
+    await checkSharedAnonymousAnalysisLimit("0123456789abcdef".repeat(4), Date.UTC(2026, 0, 1));
+
+    const postCalls = fetchMock.mock.calls.filter(([, init]) => init?.method === "POST");
+    expect(postCalls.length).toBeGreaterThan(0);
+    for (const [, init] of postCalls) expect(init?.body).toBe("");
   });
 
   it("enforces the shared global cap across different visitors", async () => {

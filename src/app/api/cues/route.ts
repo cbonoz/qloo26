@@ -120,16 +120,14 @@ export async function POST(request: Request) {
     const sharedLimit = await checkSharedAnonymousSuggestionLimit(identifier);
     if (sharedLimit && !sharedLimit.allowed) {
       const message = sharedLimit.reason === "global_limit"
-        ? `The shared daily limit of ${sharedLimit.limit ?? 500} AI reference suggestions has been reached. Add references manually instead.`
+        ? `The shared daily limit of ${sharedLimit.limit ?? 50} AI reference suggestions has been reached. Add references manually instead.`
         : `You’ve reached today’s limit of ${sharedLimit.limit ?? 10} AI reference suggestions. Add references manually or try again tomorrow.`;
       return jsonError(message, 429, sharedLimit.reason, sharedLimit.retryAfterSeconds);
     }
   } catch {
-    return jsonError(
-      "AI reference suggestions are temporarily unavailable because the usage limit could not be verified. Add references manually instead.",
-      503,
-      "rate_limit_store_unavailable",
-    );
+    // The local daily cap was already checked and counted above. If the
+    // optional shared store is unavailable, keep suggestions usable and rely
+    // on that per-process cap rather than blocking the request.
   }
 
   try {

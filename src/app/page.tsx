@@ -373,7 +373,7 @@ export default function Home() {
 
           {!isResultsStep && <WizardProgress activeStepIndex={activeStepIndex} highestStep={highestStep} hasReport={Boolean(report)} onSelect={moveToStep} />}
 
-          {error && <div className="error-banner" role="alert"><span><Icon name="close" size={16} /></span><div><strong>Couldn’t complete the analysis</strong><p>{error}</p>{error.includes("QLOO_API_KEY") && <small>Add your key to <code>.env.local</code> and restart the dev server. See <code>.env.example</code>.</small>}</div><button type="button" onClick={() => setError("")} aria-label="Dismiss error"><Icon name="close" size={16} /></button></div>}
+          {error && <div className="error-banner" role="alert"><span><Icon name="alert" size={16} /></span><div><strong>Couldn’t complete the analysis</strong><p>{error}</p>{error.includes("QLOO_API_KEY") && <small>Add your key to <code>.env.local</code> and restart the dev server. See <code>.env.example</code>.</small>}</div><button type="button" onClick={() => setError("")} aria-label="Dismiss error" title="Dismiss error"><Icon name="close" size={16} /></button></div>}
 
           <div className={`workspace-grid ${isResultsStep ? "results-view" : "setup-view"}`}>
             {isResultsStep && report ? <MarketReport report={report} /> : <>

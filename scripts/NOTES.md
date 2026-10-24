@@ -40,6 +40,24 @@ LaunchLens is not an LLM with a mood board. **Qloo is the evidence layer that ma
 - **Without Qloo:** an LLM can suggest culturally plausible ideas, but it cannot show whether they connect to the brand in this market.
 - **With Qloo:** LaunchLens can show which references connect, at what rank, and where the gaps are — then compare two strategies on the same evidence.
 
+## The Qloo API calls behind the demo
+
+The live path uses Qloo’s LLM Hackathon API at `https://hackathon.api.qloo.com` (override with `QLOO_BASE_URL`). Requests are server-side with `X-Api-Key: $QLOO_API_KEY`; hackathon keys only work with that host.
+
+1. **Entity resolution — `GET /search`**
+   - Brand: `/search?query=IKEA&types=urn:entity:brand&take=5`
+   - Each cultural reference: `/search?query=MUJI&take=5` (no type filter, so artists, films, TV shows, brands, and places can resolve)
+   - LaunchLens takes the first match for each name.
+
+2. **Location-aware related brands — `GET /v2/insights`**
+   - Called once per resolved reference:
+     `/v2/insights?filter.type=urn:entity:brand&signal.interests.entities=<reference entity ID>&take=20&signal.location.query=Seoul`
+   - Qloo returns related brands plus the resolved locality. LaunchLens looks for the target brand in each list and records its rank, or treats a missing match as a gap.
+
+The report keeps entity names, IDs, and ranks; raw responses are not stored in the browser. The unchanged IKEA/Seoul demo is a saved snapshot of this flow, so **View example report** makes no Qloo call. LaunchLens does not use the legacy `/recs` or `/recommendations` endpoints. Reference suggestions and campaign narrative come from xAI when configured; Qloo supplies the entity resolution and related-brand evidence.
+
+See the [Qloo LLM Hackathon developer guide](https://docs.qloo.com/reference/qloo-llm-hackathon-developer-guide) for the provider-side details.
+
 ## Before you start
 
 1. Run the app:

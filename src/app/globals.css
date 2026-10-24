@@ -228,7 +228,9 @@ button { cursor: pointer; }
 .error-banner p { font-size: 11px; line-height: 1.5; margin: 4px 0; }
 .error-banner small { font-size: 10px; color: #9a6c61; }
 .error-banner code { background: #f5e4df; padding: 2px 4px; border-radius: 3px; }
-.error-banner button { margin-left: auto; align-self: flex-start; background: transparent; border: 0; color: #9a655c; padding: 2px; }
+.error-banner button { margin-left: auto; align-self: flex-start; background: transparent; border: 0; color: #9a655c; padding: 2px; cursor: pointer; border-radius: 4px; }
+.error-banner button:hover { background: #fbe4dc; color: #7d342a; }
+.error-banner button:focus-visible { outline: 2px solid #c47c6f; outline-offset: 2px; }
 .workspace-grid { display: grid; grid-template-columns: minmax(280px, .78fr) minmax(0, 1.52fr); align-items: start; gap: 17px; }
 .workspace-grid.setup-view { grid-template-columns: minmax(0, 1.12fr) minmax(260px, .88fr); }
 .workspace-grid.results-view { grid-template-columns: minmax(0, 1fr); }
