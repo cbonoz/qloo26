@@ -323,6 +323,7 @@ export default function Home() {
   const activeStepIndex = wizardSteps.findIndex((step) => step.id === currentStep);
   const isLandingPage = currentStep === "landing";
   const isResultsStep = currentStep === "results" && report !== null;
+  const isInlineReferenceCountError = currentStep === "audience" && error.startsWith("Add at least two cultural references");
   const guidanceStep = isResultsStep ? "results" : currentStep === "landing" ? "market" : currentStep;
   const guidance = stepGuidance[guidanceStep];
 
@@ -373,7 +374,7 @@ export default function Home() {
 
           {!isResultsStep && <WizardProgress activeStepIndex={activeStepIndex} highestStep={highestStep} hasReport={Boolean(report)} onSelect={moveToStep} />}
 
-          {error && <div className="error-banner" role="alert"><span><Icon name="alert" size={16} /></span><div><strong>Couldn’t complete the analysis</strong><p>{error}</p>{error.includes("QLOO_API_KEY") && <small>Add your key to <code>.env.local</code> and restart the dev server. See <code>.env.example</code>.</small>}</div><button type="button" onClick={() => setError("")} aria-label="Dismiss error" title="Dismiss error"><Icon name="close" size={16} /></button></div>}
+          {error && !isInlineReferenceCountError && <div className="error-banner" role="alert"><span><Icon name="alert" size={16} /></span><div><strong>Couldn’t complete the analysis</strong><p>{error}</p>{error.includes("QLOO_API_KEY") && <small>Add your key to <code>.env.local</code> and restart the dev server. See <code>.env.example</code>.</small>}</div><button type="button" onClick={() => setError("")} aria-label="Dismiss error" title="Dismiss error"><Icon name="close" size={16} /></button></div>}
 
           <div className={`workspace-grid ${isResultsStep ? "results-view" : "setup-view"}`}>
             {isResultsStep && report ? <MarketReport report={report} /> : <>

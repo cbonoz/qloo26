@@ -1,5 +1,5 @@
-import { useState } from "react";
-import type { FormEventHandler, KeyboardEvent } from "react";
+import { useRef, useState } from "react";
+import type { FormEvent, FormEventHandler, KeyboardEvent } from "react";
 import { Icon } from "@/components/launch-lens/icon";
 import type { ReferenceDraft, WizardStep } from "@/components/launch-lens/wizard-types";
 
@@ -76,10 +76,21 @@ export function MarketCheckForm({
   onCompanyWebsiteChange,
 }: MarketCheckFormProps) {
   const [referenceInput, setReferenceInput] = useState("");
+  const [referenceValidationAttempted, setReferenceValidationAttempted] = useState(false);
+  const referenceInputRef = useRef<HTMLInputElement>(null);
   const detail = stepDetails[step];
   const isFinalStep = step === "preview";
   const referenceCount = references.length;
   const atReferenceLimit = referenceCount >= 4;
+  const needsMoreReferences = step === "audience" && referenceValidationAttempted && referenceCount < 2;
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    if (step === "audience" && referenceCount < 2) {
+      setReferenceValidationAttempted(true);
+      referenceInputRef.current?.focus();
+    }
+    onSubmit(event);
+  }
 
   function addReferences(raw: string) {
     const additions = raw.split(/[\n,]/).map((item) => item.trim()).filter(Boolean);
@@ -115,7 +126,7 @@ export function MarketCheckForm({
         <div><h2>{detail.title}</h2><p>{detail.description}</p></div>
       </div>
       {step === "market" && <div className="form-demo-row"><p className="form-demo-hint">Start blank, or load an example brief.</p><button className="fill-demo-button" type="button" onClick={onFillDemo} disabled={loading || suggesting}><Icon name="sparkle" size={14} />Fill demo data</button></div>}
-      <form onSubmit={onSubmit}>
+      <form onSubmit={handleSubmit}>
         {step === "market" && <>
           <label className="field-label" htmlFor="brand">Brand or product <span className="required">*</span></label>
           <div className="input-with-icon"><span className="input-brand-icon">✳</span><input id="brand" maxLength={100} value={brand} onChange={(event) => { onBrandChange(event.target.value); onDraftChange(); }} placeholder="e.g. Patagonia" /></div>
@@ -131,15 +142,16 @@ export function MarketCheckForm({
             <label className="field-label" htmlFor="goal">What are you trying to do in {market.trim() || "this market"}? <span className="required">*</span></label>
             <textarea id="goal" rows={3} maxLength={400} value={goal} onChange={(event) => { onGoalChange(event.target.value); onDraftChange(); }} placeholder="e.g. Launch a compact furniture line for people living in small apartments" />
             <div className="field-hint">One sentence is enough. We use it to pick cultural references and to keep the ideas in your brief on target.</div>
-            <button className="suggest-button" type="button" onClick={onSuggestReferences} disabled={suggesting || loading || !goal.trim() || xaiConfigured === false}>
-              {suggesting ? <><span className="suggest-spinner" />Finding references…</> : <><Icon name="sparkle" size={14} />Suggest cultural references</>}
-            </button>
-            {xaiConfigured === false
-              ? <p className="suggest-hint">AI reference suggestions are not available on this deployment. Add 2–4 cultural references yourself below.</p>
-              : <p className="suggest-hint">The AI picks 2–4 artists, films, brands, or places to test against your brand in {market.trim() || "your market"}. You can edit the list before running the check.</p>}
           </div>
 
           <div className="signal-label-row"><label htmlFor="reference-input">Cultural references <span className="required">*</span></label><span className="field-count">{referenceCount} / 4</span></div>
+          <div className="reference-suggest">
+            <div className="reference-suggest-copy"><strong>Need a starting point?</strong><span>Get 2–4 ideas based on your goal, then edit the list.</span></div>
+            <button className="suggest-button" type="button" onClick={onSuggestReferences} disabled={suggesting || loading || !goal.trim() || xaiConfigured === false}>
+              {suggesting ? <><span className="suggest-spinner" />Finding references…</> : <><Icon name="sparkle" size={14} />Suggest references</>}
+            </button>
+          </div>
+          {xaiConfigured === false && <p className="suggest-hint">AI suggestions aren’t available here. Add at least two references yourself below.</p>}
           <div className="reference-explainer">
             <span className="reference-explainer-label">WHY THIS MATTERS</span>
             <p>These names stand in for the cultural world your idea would enter. LaunchLens checks whether <strong>{brand.trim() || "your brand"}</strong> already has a connection to each one in <strong>{market.trim() || "your market"}</strong>. A match—especially near #1—means there’s a bridge the idea can build on. No match means the campaign would have to create that connection, so treat it as a gap to test.</p>
@@ -156,8 +168,14 @@ export function MarketCheckForm({
             </li>
           ))}</ul>}
 
+          {needsMoreReferences && <p className="reference-validation" id="reference-validation" role="alert">
+            {referenceCount === 1
+              ? "Add one more cultural reference to continue. Using at least two helps compare more than one cultural connection."
+              : "Add at least two cultural references to continue. Using more than one helps compare cultural connections."}
+          </p>}
+
           <div className="reference-add">
-            <input id="reference-input" value={referenceInput} maxLength={200} disabled={atReferenceLimit || suggesting} onChange={(event) => setReferenceInput(event.target.value)} onKeyDown={handleReferenceKeyDown} placeholder={atReferenceLimit ? "Maximum of four references" : "Add a name — separate several with commas"} />
+            <input ref={referenceInputRef} id="reference-input" value={referenceInput} maxLength={200} disabled={atReferenceLimit || suggesting} aria-invalid={needsMoreReferences} aria-describedby={needsMoreReferences ? "reference-validation" : undefined} onChange={(event) => setReferenceInput(event.target.value)} onKeyDown={handleReferenceKeyDown} placeholder={atReferenceLimit ? "Maximum of four references" : "Add a name — separate several with commas"} />
             <button type="button" onClick={() => { addReferences(referenceInput); setReferenceInput(""); }} disabled={atReferenceLimit || suggesting || !referenceInput.trim()}>Add</button>
           </div>
 
