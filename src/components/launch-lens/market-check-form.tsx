@@ -144,7 +144,7 @@ export function MarketCheckForm({
             <div className="field-hint">One sentence is enough. We use it to pick cultural references and to keep the ideas in your brief on target.</div>
           </div>
 
-          <div className="signal-label-row"><label htmlFor="reference-input">Cultural references <span className="required">*</span></label><span className="field-count">{referenceCount} / 4</span></div>
+          <div className="signal-label-row"><label htmlFor="reference-input">Cultural references <span className="required">*</span></label><span className="field-count">{referenceCount < 2 ? `${referenceCount} / 2 minimum` : `${referenceCount} selected · max 4`}</span></div>
           <div className="reference-suggest">
             <div className="reference-suggest-copy"><strong>Need a starting point?</strong><span>Get 2–4 ideas based on your goal, then edit the list.</span></div>
             <button className="suggest-button" type="button" onClick={onSuggestReferences} disabled={suggesting || loading || !goal.trim() || xaiConfigured === false}>
