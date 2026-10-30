@@ -7,7 +7,9 @@
 
 # LaunchLens — Choose What to Test in a New Market
 
-LaunchLens helps brand and strategy teams decide **which marketing activity to test first in a new market**. Give it a brand, market, and one-sentence goal. Add 2–4 cultural references (or let xAI suggest them), check them against Qloo's location-aware signals, and see the connections and gaps.
+LLM's have huge data at their disposal, but can miss hyperlocalized context.
+
+LaunchLens helps brand and strategy teams decide **which marketing activity to test first in a new market**. Give it a brand, market, and one-sentence goal. Add 2–4 cultural references (or let xAI suggest them), check them against Qloo's location-aware and culture-specific signals, and see the connections and gaps.
 
 **Live demo:** [getlaunchlens.vercel.app](https://getlaunchlens.vercel.app)
 
@@ -22,7 +24,7 @@ Demo video: https://youtu.be/vMIgTT__4VM
 - **Inspect the evidence:** see which references connect, at what rank, and where the gaps are.
 - **Treat it as a hypothesis:** the result is a testable first move, not a demand forecast.
 
-## Example: IKEA in Seoul
+## Example: IKEA entering Korea for the first time
 
 A hypothetical planning exercise, not a claim about IKEA's plans:
 
@@ -31,7 +33,8 @@ A hypothetical planning exercise, not a claim about IKEA's plans:
 - **Ideas to compare:** a small-space design workshop vs. a repair-and-swap event.
 - **What it shows:** whether those references connect to IKEA in Seoul, and where the signals are missing. The optional AI comparison explains which activity looks like the better first test.
 
-The unchanged example opens a bundled Qloo snapshot: **Fill demo data** loads the brief, and **View example report** opens the snapshot without an API call. Any edit switches the final action to a live **Run market check**.
+The unchanged example opens a bundled Qloo snapshot:
+**Fill demo data** loads the brief, and **View example report** opens the snapshot without an API call. Any edit switches the final action to a live **Run market check**.
 
 Presenter materials: [6-minute walkthrough](scripts/NOTES.md) and [live scenarios](scripts/EXAMPLES.md).
 
