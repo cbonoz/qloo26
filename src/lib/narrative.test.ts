@@ -52,6 +52,8 @@ describe("xAI narrative provider", () => {
       },
     });
     const input = body.input as Array<{ content: string }>;
+    expect(input[0]?.content).toContain("When directMatches is 0");
+    expect(input[0]?.content).toContain("Do not treat other brands in relatedBrands as proof");
     expect(JSON.parse(input[1].content)).toMatchObject({
       qlooScoreDetails: { directMatches: 3, totalReferences: 3, bestRank: 2 },
     });

@@ -16,7 +16,7 @@ export function MarketReport({ report }: { report: AnalysisReport }) {
       ? "Some observed overlap"
     : report.directHits
       ? "Limited observed overlap"
-      : "No direct overlap found";
+      : "No matches in selected references";
   const overlapPercent = report.signalCount ? Math.round((report.directHits / report.signalCount) * 100) : 0;
   const bestRank = getBestRank(report.evidence);
   const scoreExplanation = describeAlignmentScore(report);
@@ -84,24 +84,30 @@ export function MarketReport({ report }: { report: AnalysisReport }) {
 function ComparisonDecision({ report, label }: { report: AnalysisReport; label: string }) {
   const comparison = report.comparison!;
   const [first, second] = comparison;
+  const hasDirectMatches = report.directHits > 0;
   const hasLeader = first.score !== second.score;
   const winner = hasLeader ? (first.score > second.score ? first : second) : null;
   const runnerUp = winner ? (winner === first ? second : first) : null;
   const margin = winner ? Math.abs(first.score - second.score) : 0;
   const scored = report.aiAssisted || report.mode === "cached";
+  const showScores = scored && hasDirectMatches;
 
   return (
     <article className="decision-card">
       <div className="card-title-row">
-        <div><span className="small-kicker">WHICH TO TEST FIRST</span><h3>Our recommendation</h3></div>
+        <div><span className="small-kicker">WHICH TO TEST FIRST</span><h3>{hasDirectMatches ? "Our recommendation" : "A starting point to explore"}</h3></div>
         <span className="ai-label"><Icon name="sparkle" size={13} />{label}</span>
       </div>
 
+      {!hasDirectMatches && <p className="decision-intro">Qloo returned no direct brand matches for these references. This comparison is a goal-led test hypothesis, not a Qloo-backed fit or forecast.</p>}
+
       <div className={`decision-verdict ${winner ? "has-winner" : ""}`}>
-        <span className="decision-kicker">{winner ? "RECOMMENDED TO TEST FIRST" : "NO CLEAR LEADER"}</span>
+        <span className="decision-kicker">{winner ? hasDirectMatches ? "RECOMMENDED TO TEST FIRST" : "GOAL-LED IDEA TO EXPLORE" : "NO CLEAR LEADER"}</span>
         <strong className="decision-name">{winner ? winner.name : "Test both ideas with a small audience"}</strong>
         {winner && <p className="decision-why"><b>Why:</b> {winner.rationale}</p>}
-        {winner && <p className="decision-margin">Scored {winner.score} vs. {runnerUp?.score} for {runnerUp?.name} — a {margin}-point gap on the Qloo evidence above.</p>}
+        {winner && <p className="decision-margin">{hasDirectMatches
+          ? `Scored ${winner.score} vs. ${runnerUp?.score} for ${runnerUp?.name} — a ${margin}-point gap on the Qloo evidence above.`
+          : "The model favors this option based on your goal; Qloo found no direct brand matches for this reference set."}</p>}
         {!winner && <p className="decision-why">No model ranking is available for this comparison{scored ? " and the two ideas scored evenly" : ""}. Use the Qloo evidence to frame a small test, then validate it with your audience.</p>}
         <p className="decision-caveat">A hypothesis to test, not a forecast. Validate with people in {report.marketResolved || report.market} before committing spend.</p>
       </div>
@@ -113,12 +119,12 @@ function ComparisonDecision({ report, label }: { report: AnalysisReport; label: 
           <div className={`comparison-option ${isWinner ? "recommended" : ""}`} key={`${item.name}-${index}`}>
             <div className="comparison-option-top">
               <span className="comparison-letter">{index === 0 ? "A" : "B"}</span>
-              {isWinner && <span className="comparison-badge">Recommended</span>}
+              {isWinner && <span className="comparison-badge">{hasDirectMatches ? "Recommended" : "Explore first"}</span>}
               {isRunnerUp && <span className="comparison-badge muted">Runner-up</span>}
             </div>
             <div>
               <strong>{item.name}</strong>
-              <div className="comparison-score">{scored ? item.score : "—"}<span>{scored ? "/100 model estimate" : "not scored"}</span></div>
+              {showScores && <div className="comparison-score">{item.score}<span>/100 model estimate</span></div>}
               <p>{item.rationale}</p>
             </div>
           </div>
@@ -130,15 +136,17 @@ function ComparisonDecision({ report, label }: { report: AnalysisReport; label: 
 }
 
 function RankedIdeas({ report, ideas, label }: { report: AnalysisReport; ideas: ConceptIdea[]; label: string }) {
-  const scored = report.aiAssisted || report.mode === "cached";
+  const scored = (report.aiAssisted || report.mode === "cached") && report.directHits > 0;
 
   return (
     <article className="decision-card">
       <div className="card-title-row">
-        <div><span className="small-kicker">WHAT TO TEST FIRST</span><h3>Top ideas, ranked</h3></div>
+        <div><span className="small-kicker">WHAT TO TEST FIRST</span><h3>{report.directHits === 0 ? "Ideas to explore" : "Top ideas, ranked"}</h3></div>
         <span className="ai-label"><Icon name="sparkle" size={13} />{label}</span>
       </div>
-      <p className="decision-intro">You didn’t enter campaign ideas, so these are the first tests we’d run for {report.brand.name} in {report.marketResolved || report.market} — ranked by how well the Qloo signals support them.</p>
+      <p className="decision-intro">{report.directHits === 0
+        ? `Qloo returned no direct ${report.brand.name} matches for these references. These are exploratory ideas based on your goal—not concepts supported by positive Qloo matches.`
+        : `You didn’t enter campaign ideas, so these are the first tests we’d run for ${report.brand.name} in ${report.marketResolved || report.market} — ranked by how well the Qloo signals support them.`}</p>
       <ol className="idea-list">{ideas.map((idea, index) => (
         <li className="idea-row" key={`${idea.name}-${index}`}>
           <span className="idea-rank">{index + 1}</span>
@@ -149,7 +157,9 @@ function RankedIdeas({ report, ideas, label }: { report: AnalysisReport; ideas: 
           </div>
         </li>
       ))}</ol>
-      <div className="recommendation-footnote">Ranked hypotheses from the Qloo evidence above—not predictions of campaign performance.</div>
+      <div className="recommendation-footnote">{report.directHits === 0
+        ? "The order is a goal-led starting point, not an evidence-backed winner or performance prediction."
+        : "Ranked hypotheses from the Qloo evidence above—not predictions of campaign performance."}</div>
     </article>
   );
 }

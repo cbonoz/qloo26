@@ -40,7 +40,11 @@ export function describeAlignmentScore(
   const bestRank = getBestRank(report.evidence);
 
   if (report.directHits === 0) {
-    return `${report.brand.name} did not appear in the related-brand results for any of ${references}, so the score is 0. That is a gap to investigate—not proof of rejection. It measures overlap with these references, not demand or brand quality.`;
+    const referenceNames = report.evidence.map((item) => item.name);
+    const referenceList = referenceNames.length > 1
+      ? `${referenceNames.slice(0, -1).join(", ")} or ${referenceNames.at(-1)}`
+      : referenceNames[0] || "the selected references";
+    return `${report.brand.name} was not returned in Qloo's related-brand results for ${referenceList}. A zero means no direct match in these selected result lists—not zero popularity or cultural relevance. Try references closer to the audience or experience you want to explore; different references may surface different connections, but a match is not guaranteed.`;
   }
 
   const coverage = report.directHits === count ? `all ${references}` : `${report.directHits} of ${references}`;

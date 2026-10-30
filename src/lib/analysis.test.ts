@@ -58,12 +58,16 @@ describe("describeAlignmentScore", () => {
       brand,
       directHits: 0,
       signalCount: 2,
-      evidence: [evidence(null), evidence(null)],
+      evidence: [
+        { ...evidence(null), name: "Luckin Coffee" },
+        { ...evidence(null), name: "NewJeans" },
+      ],
     });
 
-    expect(text).toContain("did not appear");
-    expect(text).toContain("score is 0");
-    expect(text).toContain("not proof of rejection");
+    expect(text).toContain("not returned in Qloo's related-brand results");
+    expect(text).toContain("Luckin Coffee or NewJeans");
+    expect(text).toContain("not zero popularity or cultural relevance");
+    expect(text).toContain("Try references closer to the audience or experience");
   });
 
   it("acknowledges when the brand appears for every reference", () => {

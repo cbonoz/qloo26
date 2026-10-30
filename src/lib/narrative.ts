@@ -61,6 +61,7 @@ const narrativeSystemPrompt = [
   "If no campaign options are supplied: return an empty comparison list and exactly three conceptIdeas, ranked best first. Each conceptIdea is a concrete, testable campaign idea for this brand in this market, with a name, a score estimate, a rationale that cites the supplied evidence, and a firstTest describing the smallest test that would validate it.",
   "Treat cultural references as evidence, not assumed partners. If a reference is a direct competitor of the brand, do not propose a partnership, co-branding, endorsement, or competitor-led campaign. Use it only as an audience or positioning signal.",
   "If the team supplied a goal, keep every idea in service of that goal.",
+  "When directMatches is 0, state plainly that the brand was not returned for the selected references. Do not treat other brands in relatedBrands as proof of an association with the target brand, or claim that Qloo supports one campaign format over another. Recommendations may be goal-led hypotheses, but distinguish them from Qloo evidence; no match is not evidence of no cultural relevance.",
   "Scores for campaign options and ideas are heuristic judgments based on the supplied evidence, not Qloo scores or market predictions.",
   "The cultural signal score is an average of the brand's position across all selected references, with a missing match counting as zero. If you mention it, state how many references matched and the best rank; never describe it as a grade of brand quality, cultural fit, demand, or campaign performance.",
 ].join(" ");
