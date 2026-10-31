@@ -18,9 +18,11 @@ describe("suggestCulturalReferences", () => {
   it("keeps only the suggestions Qloo can resolve and drops the brand itself", async () => {
     vi.stubEnv("XAI_API_KEY", "test-xai-key");
     vi.stubEnv("QLOO_API_KEY", "test-qloo-key");
-    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+    let xaiRequestBody = "";
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = new URL(String(input));
       if (url.host.includes("x.ai")) {
+        xaiRequestBody = String(init?.body);
         return xaiResponse({
           references: [
             { name: "Muji", why: "Small-space design reference for the goal." },
@@ -45,6 +47,7 @@ describe("suggestCulturalReferences", () => {
       goal: "Launch a small-space furniture line in Seoul.",
     });
 
+    expect(xaiRequestBody).toContain("prioritize specific brands from the target market");
     expect(result?.references.map((item) => item.name)).toEqual(["Muji"]);
     expect(result?.references[0].why).toContain("Small-space design");
     expect(result?.unresolved).toEqual(["Unresolvable Thing", "IKEA"]);

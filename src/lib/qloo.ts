@@ -5,6 +5,17 @@ export type QlooEntity = {
   entityId: string;
 };
 
+export function displayResolvedBrandName(query: string, resolvedName: string) {
+  const submittedName = query.trim();
+  const isShortUppercaseName = submittedName.length >= 2
+    && submittedName.length <= 5
+    && submittedName === submittedName.toUpperCase();
+
+  return isShortUppercaseName && submittedName.toLowerCase() === resolvedName.trim().toLowerCase()
+    ? submittedName
+    : resolvedName;
+}
+
 export type RelatedBrandsResult = {
   brands: Array<QlooEntity & { popularity: number | null }>;
   locality: QlooEntity | null;

@@ -64,10 +64,11 @@ describe("describeAlignmentScore", () => {
       ],
     });
 
-    expect(text).toContain("not returned in Qloo's related-brand results");
+    expect(text).toContain("not in the up-to-20 related-brand results Qloo returned");
     expect(text).toContain("Luckin Coffee or NewJeans");
     expect(text).toContain("not zero popularity or cultural relevance");
-    expect(text).toContain("Try references closer to the audience or experience");
+    expect(text).toContain("If you want to test local competition, include local competitor brands as references");
+    expect(text).toContain("This run cannot tell which alternatives would match");
   });
 
   it("acknowledges when the brand appears for every reference", () => {

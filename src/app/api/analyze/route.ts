@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { calculateAlignmentScore } from "@/lib/analysis";
 import { checkAnonymousAnalysisLimit, checkSharedAnonymousAnalysisLimit, getAnonymousIdentifier, recordAnonymousAttempt } from "@/lib/abuse";
 import { createNarrative } from "@/lib/narrative";
-import { getRelatedBrands, QlooApiError, searchEntities } from "@/lib/qloo";
+import { displayResolvedBrandName, getRelatedBrands, QlooApiError, searchEntities } from "@/lib/qloo";
 import type { AnalysisReport, SignalEvidence } from "@/lib/types";
 
 type RequestBody = {
@@ -145,8 +145,12 @@ export async function POST(request: Request) {
       Promise.all(signals.map(async (input) => ({ input, matches: await searchEntities(input) }))),
     ]);
 
-    const brand = brandMatches[0];
-    if (!brand) return jsonError(`Qloo could not resolve “${brandQuery}” as a brand. Try a more specific name.`, 422, "brand_not_found");
+    const resolvedBrand = brandMatches[0];
+    if (!resolvedBrand) return jsonError(`Qloo could not resolve “${brandQuery}” as a brand. Try a more specific name.`, 422, "brand_not_found");
+    const brand = {
+      ...resolvedBrand,
+      name: displayResolvedBrandName(brandQuery, resolvedBrand.name),
+    };
 
     const resolvedSeeds = seedMatches.flatMap(({ input, matches }) => {
       const entity = matches[0];

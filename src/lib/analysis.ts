@@ -44,7 +44,7 @@ export function describeAlignmentScore(
     const referenceList = referenceNames.length > 1
       ? `${referenceNames.slice(0, -1).join(", ")} or ${referenceNames.at(-1)}`
       : referenceNames[0] || "the selected references";
-    return `${report.brand.name} was not returned in Qloo's related-brand results for ${referenceList}. A zero means no direct match in these selected result lists—not zero popularity or cultural relevance. Try references closer to the audience or experience you want to explore; different references may surface different connections, but a match is not guaranteed.`;
+    return `${report.brand.name} was not in the up-to-20 related-brand results Qloo returned for ${referenceList}. A zero describes only these specific result lists—not zero popularity or cultural relevance. If you want to test local competition, include local competitor brands as references; otherwise try references closer to the audience or experience you want to explore. This run cannot tell which alternatives would match, and a new reference is not guaranteed to produce one.`;
   }
 
   const coverage = report.directHits === count ? `all ${references}` : `${report.directHits} of ${references}`;

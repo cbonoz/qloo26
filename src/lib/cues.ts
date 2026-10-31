@@ -38,6 +38,7 @@ const suggestionSystemPrompt = [
   "You are given a brand, a target market, and what the team wants to do there.",
   "Propose 2 to 4 cultural references to check. Every reference must be a specific, well-known proper noun that a cultural data provider can resolve as an entity: an artist, musician, film, TV series, brand, or place.",
   "Rules: never propose a generic category, demographic, or trait (no 'young people', 'premium', 'sustainable lifestyle'); never propose the brand itself; prefer references with real cultural relevance in the target market; keep each name short, unambiguous, and spelled the way a fan would write it.",
+  "If the goal is explicitly about competing with local alternatives, prioritize specific brands from the target market when you can identify them confidently; do not substitute global competitors and call them local. If the goal does not name competition, provide a useful mix of culturally relevant references rather than a competitor list. Never imply the suggestions are exhaustive market research or guaranteed to match the target brand in Qloo.",
   "For each reference, write one short sentence explaining why it is a useful reference for this team's goal in this market.",
 ].join(" ");
 
